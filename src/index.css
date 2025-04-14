@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom fonts */
+@font-face {
+  font-family: 'JanuarySnack';
+  src: url('/fonts/JanuarySnack.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Punchliner';
+  src: url('/fonts/Punchliner.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
