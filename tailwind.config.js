@@ -1,11 +1,13 @@
 export default {
-  content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
+  content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}",
+    "./node_modules/flowbite/**/*.js",
+  ],
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Punchliner', 'sans-serif'],
+        sans: ['coiny','Punchliner', 'sans-serif'],
       },
     },
   },
-  plugins: [],
+  plugins: [require('flowbite/plugin'),],
 }

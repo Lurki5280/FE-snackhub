@@ -1,7 +1,10 @@
 import React from "react"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+import AdsLogo from "../components/AdsLogo"
 import {getAllSnacks} from "../api/snacks"
+import FeaturedSnacks from "../components/FeaturedSnacks"
+import Spinner from "../components/Spinner"
 function Home() {
   const [snacks, setSnacks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -21,34 +24,47 @@ function Home() {
     fetchSnacks()
   }, [])
   return (
-    <section className="bg-gradient-to-b from-yellow-50 to-white min-h-screen flex flex-col items-center justify-center px-4 text-center">
-      <h1 className="text-4xl md:text-5xl font-punch text-orange-600 max-w-2xl leading-tight">
-        Snacks from Around the World, Delivered Monthly!
+    <section className="bg-gradient-to-b from-yellow-50 to-white min-h-screen flex flex-col items-center justify-center text-center">
+    <div className="relative max-w-2xl items-center mr-auto p-6 md:m-20">
+      <h1 className="text-3xl md:text-4xl font-punch text-orange-600 max-w-2xl leading-tight">
+      Vị ngon từng vùng – đến tay mỗi tháng!
       </h1>
-      <p className="mt-4 font-punch text-lg text-gray-700 max-w-xl">
-        Join thousands who explore a new country every month — through snacks, culture, and fun.
+      <p className="mt-6 font-punch text-lg text-gray-700 max-w-xl">
+      Khám phá hương vị Việt Nam từ Bắc chí Nam — cùng hàng ngàn người yêu thích đồ ăn vặt và văn hóa địa phương!
       </p>
       <Link
         to="/subscribe"
-        className="mt-6 bg-orange-500 text-white px-6 py-3 rounded-full text-lg hover:bg-orange-600 transition"
+        className="mt-6 inline-block bg-orange-500 text-white px-6 py-3 bg-[#ff784e] rounded-full hover:bg-[#cc603e] transition border-4 border-[#3F3F3F]"
       >
-        Subscribe Now
+        Khám phá
       </Link>
+      <Link
+        to="/subscribe"
+        className="ml-6 mt-6 inline-block bg-orange-500 text-white px-6 py-3 bg-red-400 text-black rounded-full hover:bg-red-500 transition border-4 border-black"
+      >
+        Quà tặng
+      </Link>
+      </div>
+      <AdsLogo></AdsLogo>
       <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4 text-center">Our Snacks 🧃🍪</h1>
+      <h1 className="text-3xl font-bold mb-4 text-center">Sản Phẩm</h1>
 
       {loading ? (
-        <p className="text-center text-gray-500">Loading snacks...</p>
+        <Spinner></Spinner>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {snacks.map((snack) => (
-            <div key={snack._id} className="bg-white shadow rounded-xl p-4 hover:shadow-lg transition">
+            <Link
+            to={`/product/${snack._id}`}
+            key={snack._id}
+            className="bg-white shadow rounded-xl p-4 hover:shadow-lg transition block"
+          >
               <h2 className="text-xl font-semibold">{snack.snackName}</h2>
               <p className="text-sm text-gray-600 mt-2">{snack.description}</p>
               {snack.image && (
                 <img src={snack.image} alt={snack.name} className="w-full h-40 object-cover rounded-lg mt-3" />
               )}
-            </div>
+            </Link>
           ))}
         </div>
       )}

@@ -1,18 +1,12 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
+@import 'flowbite';
 /* Custom fonts */
 @font-face {
-  font-family: 'JanuarySnack';
-  src: url('/fonts/JanuarySnack.ttf') format('truetype');
+  font-family: 'coiny';
+  src: url('/fonts/coiny-regular.ttf') format('truetype');
   font-weight: normal;
   font-style: normal;
 }
 
-@font-face {
-  font-family: 'Punchliner';
-  src: url('/fonts/Punchliner.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}

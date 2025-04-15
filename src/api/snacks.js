@@ -6,6 +6,6 @@ export const getAllSnacks = async () => {
 };
 
 export const getSnackById = async (SnackId) => {
-    const res = await axiosInstance.get(`/snacks/${SnackId}`);
+    const res = await axiosInstance.get(`api/snacks/${SnackId}`);
     return res.data;
 };
