@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import { Link, NavLink, useNavigate } from "react-router-dom"
 import { HiBars3, HiXMark } from "react-icons/hi2"
 import { FaUserCircle } from "react-icons/fa"
+import { useSelector, useDispatch } from "react-redux";
 const menuItems = [
   {
     label: "Bán chạy nhất",
@@ -29,10 +30,19 @@ const menuItems = [
     path: "/contact"
   },
 ]
-function Header() {
-  const [isOpen, setIsOpen] = useState(false)
-  const navigate = useNavigate()
 
+function Header() {
+
+  const handleAvatarClick = () => {
+    if (user) {
+      navigate("/profile");
+    } else {
+      navigate("/login");
+    }
+  };
+  const [isOpen, setIsOpen] = useState(false)
+  const navigate = useNavigate();
+  const { user, token } = useSelector((state) => state.auth);
   return (
     <>
       {isOpen && (
@@ -48,7 +58,7 @@ function Header() {
         }`}
       >
         <div className="flex justify-between items-center p-4 border-b">
-        <Link to="/login"><h2 className="flex text-sm gap-2 font-bold text-[#ff784e] "><FaUserCircle size={20}/>Tài khoản</h2></Link>
+        <button onClick={handleAvatarClick}><h2 className="flex text-sm gap-2 font-bold text-[#ff784e] "><FaUserCircle size={20}/>Tài khoản</h2></button>
           <button onClick={() => setIsOpen(false)}>
             <HiXMark size={24} />
           </button>
@@ -74,6 +84,7 @@ function Header() {
           <HiBars3 size={40} />
         </button>
 
+        <div className="hidden lg:flex lg:flex-1 lg:justify-end items-center gap-8"></div>
         <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-blue-600">
         <img src="../assets/Logo.png" alt="SnackHub Logo" className="h-20 object-contain" />
         </Link>
@@ -81,7 +92,7 @@ function Header() {
         <div className="flex items-center gap-3">
         <div className="hidden md:flex items-center gap-3">
           <Link
-            to="/subscribe"
+            to="/popular"
             className="text font-punch px-8 py-1.5 bg-[#ff784e] text-white rounded-s-xl hover:bg-[#cc603e] transition border-4 border-[#3F3F3F]"
           >
             Khám phá
@@ -93,15 +104,20 @@ function Header() {
             Tặng quà
           </Link>
         </div>
-
-        <button onClick={() => navigate("/login")} className="text-gray-700">
-          <FaUserCircle size={35} />
-        </button>
+        <button onClick={handleAvatarClick}>
+        {user?.avatar ? (
+            <img
+              src={user.avatar}
+              alt="Avatar"
+              className="h-8 w-8 rounded-full cursor-pointer"
+            />
+          ) : (
+            <FaUserCircle size={35} className="cursor-pointer text-gray-700" />
+          )}
+          </button>
       </div>
-
       </div>
     </nav>
-
     </>
   )
 }

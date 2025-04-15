@@ -33,7 +33,7 @@ function Home() {
       Khám phá hương vị Việt Nam từ Bắc chí Nam — cùng hàng ngàn người yêu thích đồ ăn vặt và văn hóa địa phương!
       </p>
       <Link
-        to="/subscribe"
+        to="/popular"
         className="mt-6 inline-block bg-orange-500 text-white px-6 py-3 bg-[#ff784e] rounded-full hover:bg-[#cc603e] transition border-4 border-[#3F3F3F]"
       >
         Khám phá
@@ -47,7 +47,7 @@ function Home() {
       </div>
       <AdsLogo></AdsLogo>
       <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4 text-center">Sản Phẩm</h1>
+      <h1 className="text-3xl font-bold mb-4 text-center">Tất cả Sản Phẩm</h1>
 
       {loading ? (
         <Spinner></Spinner>

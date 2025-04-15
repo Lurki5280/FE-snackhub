@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { login } from "../store/reducers/authReducer";
 import { Link } from "react-router-dom";
-
+import { toast } from "react-toastify";
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -23,16 +23,14 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await dispatch(login(formData)).unwrap();
-      navigate("/");
-    } catch (error) {
-      console.error("Login failed:", error);
-      if (typeof error === "object") {
-        alert("Login failed: " + JSON.stringify(error));
-      } else {
-        alert("Login failed: " + error);
+        const result = await dispatch(login(formData)).unwrap();
+        console.log("Login result:", result);
+        toast.success("Đăng nhập thành công!");
+        setTimeout(() => navigate("/"), 2000);
+      } catch (error) {
+        console.log("Login error:", error);
+        toast.error("Đăng nhập thất bại!");
       }
-    }
   };
   
 
