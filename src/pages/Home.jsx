@@ -2,7 +2,7 @@ import React from "react"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
 import AdsLogo from "../components/AdsLogo"
-import {getAllSnacks} from "../api/snacks"
+import {getSnacksByCategoryId} from "../api/snacks"
 import FeaturedSnacks from "../components/FeaturedSnacks"
 import Spinner from "../components/Spinner"
 function Home() {
@@ -12,7 +12,7 @@ function Home() {
   useEffect(() => {
     const fetchSnacks = async () => {
       try {
-        const data = await getAllSnacks()
+        const data = await getSnacksByCategoryId()
         setSnacks(data)
       } catch (error) {
         console.error("Failed to fetch snacks:", error)

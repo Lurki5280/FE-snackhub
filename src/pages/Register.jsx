@@ -14,6 +14,7 @@ const Register = () => {
     firstName: "",
     lastName: "",
     email: "",
+    phoneNumber:"",
     password: "",
     confirmPassword: "",
   });
@@ -33,6 +34,7 @@ const Register = () => {
     }
     try {
       await dispatch(register(formData)).unwrap();
+    
       navigate("/login");
     } catch (error) {
       console.error("Registration failed:", error);
@@ -94,6 +96,18 @@ const Register = () => {
                 onChange={handleChange}
                 className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
                 required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">
+                Số điện thoại
+              </label>
+              <input
+                type="tel"
+                name="phoneNumber"
+                value={formData.phoneNumber}
+                onChange={handleChange}
+                className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
               />
             </div>
             <div className="flex gap-4">

@@ -1,7 +1,6 @@
 import { axiosInstance } from "../config/axiosConfig";
 import { BASE_URL } from "../utils/appConstant";
 
-axiosInstance.defaults.timeout = 10000;
 export const authLogin = async (email, password) => {
   const response = await axiosInstance.post(`/api/auth/login`, {
     email,

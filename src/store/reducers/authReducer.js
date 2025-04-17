@@ -20,6 +20,7 @@ export const register = createAsyncThunk("api/auth/register", async (formData, {
     const data = await apiRegister({
       email: formData.email,
       password: formData.password,
+      phoneNumber:formData.phoneNumber,
       firstName: formData.firstName,
       lastName: formData.lastName,
     });

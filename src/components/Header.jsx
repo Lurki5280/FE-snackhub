@@ -3,6 +3,8 @@ import { Link, NavLink, useNavigate } from "react-router-dom"
 import { HiBars3, HiXMark } from "react-icons/hi2"
 import { FaUserCircle } from "react-icons/fa"
 import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../store/reducers/authReducer";
+import { toast } from "react-toastify";
 const menuItems = [
   {
     label: "Bán chạy nhất",
@@ -32,7 +34,15 @@ const menuItems = [
 ]
 
 function Header() {
-
+  const dispatch = useDispatch();
+  const handleLogout = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    dispatch(logout());
+    toast.success("Đăng xuất thành công!");
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 1500);
+  };
   const handleAvatarClick = () => {
     if (user) {
       navigate("/profile");
@@ -104,6 +114,12 @@ function Header() {
             Tặng quà
           </Link>
         </div>
+        <button
+              onClick={handleLogout}
+              className="w-full text-left px-3 py-2 text-base text-Color hover:text-[#9C3F46]"
+            >
+              Đăng xuất
+            </button>
         <button onClick={handleAvatarClick}>
         {user?.avatar ? (
             <img
