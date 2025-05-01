@@ -3,6 +3,8 @@ import { Link, NavLink, useNavigate } from "react-router-dom"
 import { HiBars3, HiXMark } from "react-icons/hi2"
 import { FaUserCircle } from "react-icons/fa"
 import { useSelector, useDispatch } from "react-redux";
+import { logout } from "../store/reducers/authReducer";
+
 const menuItems = [
   {
     label: "Bán chạy nhất",
@@ -20,6 +22,11 @@ const menuItems = [
     path: "/past-boxes"
   },
   {
+    label: "Giỏ hàng",
+    icon: "/assets/shopping-cart.png",
+    path: "/cart"
+  },
+  {
     label: "FAQs",
     icon: "/assets/faq.png",
     path: "/faq"
@@ -32,17 +39,17 @@ const menuItems = [
 ]
 
 function Header() {
-
-  const handleAvatarClick = () => {
-    if (user) {
-      navigate("/profile");
-    } else {
-      navigate("/login");
-    }
-  };
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { user, token } = useSelector((state) => state.auth);
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login');
+  };
+
   return (
     <>
       {isOpen && (
@@ -58,68 +65,93 @@ function Header() {
         }`}
       >
         <div className="flex justify-between items-center p-4 border-b">
-        <button onClick={handleAvatarClick}><h2 className="flex text-sm gap-2 font-bold text-[#ff784e] "><FaUserCircle size={20}/>Tài khoản</h2></button>
+          <button onClick={() => navigate('/profile')}><h2 className="flex text-sm gap-2 font-bold text-[#ff784e] "><FaUserCircle size={20}/>Tài khoản</h2></button>
           <button onClick={() => setIsOpen(false)}>
             <HiXMark size={24} />
           </button>
         </div>
         <h2 className="text-2xl gap-2 font-bold bg-[#ff784e] text-white p-4">Hộp đăng ký</h2>
         <div className="flex flex-col gap-4 p-4 md:gap-2">
-        {menuItems.map((item, idx) => (
-          <Link
-            to={item.path}
-            key={idx}
-            className="bg-white w-full rounded-xl shadow p-4 flex flex-col items-center justify-center text-center hover:shadow-md transition "
-          >
-            <img src={item.icon} alt={item.label} className="w-16 h-16 mb-2" />
-            <span className="text-[#ff784e] font-semibold text-lg">{item.label}</span>
-          </Link>
-        ))}
-      </div>
+          {menuItems.map((item, idx) => (
+            <Link
+              to={item.path}
+              key={idx}
+              className="bg-white w-full rounded-xl shadow p-4 flex flex-col items-center justify-center text-center hover:shadow-md transition "
+            >
+              <img src={item.icon} alt={item.label} className="w-16 h-16 mb-2" />
+              <span className="text-[#ff784e] font-semibold text-lg">{item.label}</span>
+            </Link>
+          ))}
+        </div>
       </div>
 
       <nav className="relative z-40 bg-white shadow-md py-6">
-      <div className="max-w-screen-xl mx-auto px-4 flex items-center justify-between">
-        <button onClick={() => setIsOpen(true)} className="text-gray-700">
-          <HiBars3 size={40} />
-        </button>
-
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end items-center gap-8"></div>
-        <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-blue-600">
-        <img src="../assets/Logo.png" alt="SnackHub Logo" className="h-20 object-contain" />
-        </Link>
-
-        <div className="flex items-center gap-3">
-        <div className="hidden md:flex items-center gap-3">
-          <Link
-            to="/popular"
-            className="text font-punch px-8 py-1.5 bg-[#ff784e] text-white rounded-s-xl hover:bg-[#cc603e] transition border-4 border-[#3F3F3F]"
-          >
-            Khám phá
-          </Link>
-          <Link
-            to="/gift"
-            className="text font-punch px-8 py-1.5 bg-red-400 text-black rounded-r-xl hover:bg-red-500 transition border-4 border-black"
-          >
-            Tặng quà
-          </Link>
-        </div>
-        <button onClick={handleAvatarClick}>
-        {user?.avatar ? (
-            <img
-              src={user.avatar}
-              alt="Avatar"
-              className="h-8 w-8 rounded-full cursor-pointer"
-            />
-          ) : (
-            <FaUserCircle size={35} className="cursor-pointer text-gray-700" />
-          )}
+        <div className="max-w-screen-xl mx-auto px-4 flex items-center justify-between">
+          <button onClick={() => setIsOpen(true)} className="text-gray-700">
+            <HiBars3 size={40} />
           </button>
-      </div>
-      </div>
-    </nav>
+
+          <div className="hidden lg:flex lg:flex-1 lg:justify-end items-center gap-8"></div>
+          <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-blue-600">
+            <img src="../assets/Logo.png" alt="SnackHub Logo" className="h-20 object-contain" />
+          </Link>
+
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-3">
+              <Link
+                to="/popular"
+                className="text font-punch px-8 py-1.5 bg-[#ff784e] text-white rounded-s-xl hover:bg-[#cc603e] transition border-4 border-[#3F3F3F]"
+              >
+                Khám phá
+              </Link>
+            </div>
+            
+            {/* Avatar with dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setIsProfileOpen(!isProfileOpen)}
+                className="flex items-center gap-2 focus:outline-none"
+              >
+                <FaUserCircle className="text-[#ff784e] text-3xl" />
+                {user && <span className="hidden md:block text-sm font-medium">{user.firstName}</span>}
+              </button>
+
+              {/* Dropdown menu */}
+              {isProfileOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                  {user ? (
+                    <>
+                      <Link
+                        to="/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setIsProfileOpen(false)}
+                      >
+                        Hồ sơ
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Đăng xuất
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      to="/login"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsProfileOpen(false)}
+                    >
+                      Đăng nhập
+                    </Link>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </nav>
     </>
-  )
+  );
 }
 
-export default Header
+export default Header;

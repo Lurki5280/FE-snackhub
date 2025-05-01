@@ -1,5 +1,18 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { authLogin as apiLogin, authRegister as apiRegister } from "../../api/auth";
+import { axiosInstance } from "../../config/axiosConfig";
+
+export const getCurrentUser = createAsyncThunk(
+  "api/auth/getCurrentUser",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get('/api/users/profile');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
 
 export const login = createAsyncThunk("api/auth/login", async (formData, { rejectWithValue }) => {
   try {
@@ -15,6 +28,7 @@ export const login = createAsyncThunk("api/auth/login", async (formData, { rejec
     );
   }
 });
+
 export const register = createAsyncThunk("api/auth/register", async (formData, { rejectWithValue }) => {
   try {
     const data = await apiRegister({
@@ -22,6 +36,7 @@ export const register = createAsyncThunk("api/auth/register", async (formData, {
       password: formData.password,
       firstName: formData.firstName,
       lastName: formData.lastName,
+      phone: formData.phone
     });
     return {
       user: data.user,
@@ -43,7 +58,8 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    logout: () => {
+    logout: (state) => {
+      localStorage.removeItem("token");
       return initialState;
     },
   },
@@ -56,7 +72,8 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.loading = "idle";
         state.user = action.payload.user;  
-        state.token = action.payload.token; 
+        state.token = action.payload.token;
+        localStorage.setItem("token", action.payload.token);
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = "idle";
@@ -70,8 +87,20 @@ const authSlice = createSlice({
         state.loading = "idle";
         state.user = action.payload.user;
         state.token = action.payload.token;
+        localStorage.setItem("token", action.payload.token);
       })
       .addCase(register.rejected, (state, action) => {
+        state.loading = "idle";
+        state.error = action.payload;
+      })
+      .addCase(getCurrentUser.pending, (state) => {
+        state.loading = "loading";
+      })
+      .addCase(getCurrentUser.fulfilled, (state, action) => {
+        state.loading = "idle";
+        state.user = action.payload;
+      })
+      .addCase(getCurrentUser.rejected, (state, action) => {
         state.loading = "idle";
         state.error = action.payload;
       });

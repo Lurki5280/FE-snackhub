@@ -9,12 +9,13 @@ export const authLogin = async (email, password) => {
   });
   return response.data;
 };
-export const authRegister = async ({ email,password,firstName,lastName }) => {
+export const authRegister = async ({ email, password, firstName, lastName, phone }) => {
   const response = await axiosInstance.post(`${BASE_URL}api/auth/register`, {
     email,
     password,
     firstName,
     lastName,
+    phone
   });
   return response.data;
 };
