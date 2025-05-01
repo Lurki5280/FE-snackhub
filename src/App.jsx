@@ -10,6 +10,9 @@ import Register from "./pages/Register";
 import ProductDetail from "./pages/ProductDetail"
 import Popular from "./pages/Popular"
 import Profile from "./pages/Profile"
+import CartPage from "./pages/CartPage"
+import Order from "./pages/Order"
+
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
@@ -26,19 +29,27 @@ const router = createBrowserRouter([
       {
         path: "/register",
         element: <Register />,
-      }
-      ,{
+      },
+      {
         path: "/product/:id",
         element: <ProductDetail />,
       },
       {
         path: "/popular",
         element: <Popular />,
-      }
-      ,{
-        path:"/profile",
-        element:<Profile/>,
-      }
+      },
+      {
+        path: "/profile",
+        element: <Profile />,
+      },
+      {
+        path: "/cart",
+        element: <CartPage />,
+      },
+      {
+        path: "/order",
+        element: <Order />,
+      },
     ]
   }
 ]);

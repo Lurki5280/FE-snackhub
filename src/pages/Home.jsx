@@ -61,8 +61,8 @@ function Home() {
           >
               <h2 className="text-xl font-semibold">{snack.snackName}</h2>
               <p className="text-sm text-gray-600 mt-2">{snack.description}</p>
-              {snack.image && (
-                <img src={snack.image} alt={snack.name} className="w-full h-40 object-cover rounded-lg mt-3" />
+              {snack.images && (
+                <img src={snack.images} alt={snack.name} className="w-full h-40 object-cover rounded-lg mt-3" />
               )}
             </Link>
           ))}
