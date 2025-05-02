@@ -104,7 +104,6 @@ function Popular() {
         toast.error('Vui lòng đăng nhập để thêm vào giỏ hàng!');
         return;
       }
-
       const quantity = quantities[snack._id] || 1;
       await axiosInstance.post('/api/carts', {
         snackId: snack._id,

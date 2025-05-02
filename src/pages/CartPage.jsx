@@ -1,32 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector,useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { FaTrash, FaMinus, FaPlus } from 'react-icons/fa';
 import { axiosInstance } from '../config/axiosConfig';
 import { toast } from 'react-toastify';
-
+import Modal from '../components/Modal';
+import { fetchCart,removeCartItem,removeAllCart,updateCartItemQuantity,} from '../store/reducers/cartReducer';
 const CartPage = () => {
   const navigate = useNavigate();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   const { token } = useSelector((state) => state.auth);
-  const [cart, setCart] = useState(null);
+  const cart = useSelector(state => state.cart.cart);
+  console.log(cart)
   const [loading, setLoading] = useState(false);
   const [orderLoading, setOrderLoading] = useState(false);
-
-  const fetchCart = async () => {
-    try {
-      const response = await axiosInstance.get('/api/carts');
-      setCart(response.data);
-    } catch (error) {
-      console.error('Error fetching cart:', error);
-      toast.error('Không thể tải giỏ hàng');
-    }
-  };
-
+  const dispatch = useDispatch();
   const updateQuantity = async (snackId, quantity) => {
     try {
       setLoading(true);
-      await axiosInstance.put(`/api/carts/${snackId}`, { quantity });
-      await fetchCart();
+      console.log("snackid:",snackId);
+      dispatch(updateCartItemQuantity({snackId,quantity,token}));
       toast.success('Cập nhật số lượng thành công');
     } catch (error) {
       console.error('Error updating quantity:', error);
@@ -39,8 +33,7 @@ const CartPage = () => {
   const removeFromCart = async (snackId) => {
     try {
       setLoading(true);
-      await axiosInstance.delete(`/api/carts/${snackId}`);
-      await fetchCart();
+      const res = await dispatch(removeCartItem({ snackId, token })).unwrap();
       toast.success('Đã xóa sản phẩm khỏi giỏ hàng');
     } catch (error) {
       console.error('Error removing item:', error);
@@ -53,8 +46,7 @@ const CartPage = () => {
   const clearCart = async () => {
     try {
       setLoading(true);
-      await axiosInstance.delete('/api/carts');
-      await fetchCart();
+      await dispatch(removeAllCart({token})).unwrap();
       toast.success('Đã xóa toàn bộ giỏ hàng');
     } catch (error) {
       console.error('Error clearing cart:', error);
@@ -68,7 +60,7 @@ const CartPage = () => {
     try {
       setLoading(true);
       await axiosInstance.post('/api/carts/apply-coupon', { couponCode });
-      await fetchCart();
+      dispatch(fetchCart({token}));
       toast.success('Áp dụng mã giảm giá thành công');
     } catch (error) {
       console.error('Error applying coupon:', error);
@@ -110,9 +102,8 @@ const CartPage = () => {
       navigate('/login');
       return;
     }
-    fetchCart();
+    dispatch(fetchCart({token}));
   }, [token, navigate]);
-
   if (!cart) {
     return (
       <div className="min-h-screen bg-gray-100 pt-20">
@@ -187,7 +178,10 @@ const CartPage = () => {
                       </p>
                       
                       <button
-                        onClick={() => removeFromCart(item.snackId._id)}
+                         onClick={() => {
+                          setItemToDelete(item.snackId._id);
+                          setIsDeleteModalOpen(true);
+                        }}
                         disabled={loading}
                         className="p-2 text-red-500 hover:bg-red-50 rounded"
                       >
@@ -199,7 +193,6 @@ const CartPage = () => {
               </div>
 
               <div className="mt-8 space-y-4">
-                {/* Coupon section */}
                 <div className="flex items-center space-x-4">
                   <input
                     type="text"
@@ -238,7 +231,7 @@ const CartPage = () => {
                 {/* Action buttons */}
                 <div className="flex justify-between items-center pt-4">
                   <button
-                    onClick={clearCart}
+                    onClick={() => clearCart()}
                     disabled={loading}
                     className="text-red-500 hover:text-red-600"
                   >
@@ -265,7 +258,23 @@ const CartPage = () => {
           )}
         </div>
       </div>
+      <Modal
+  isOpen={isDeleteModalOpen}
+  message="Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng không?"
+  onConfirm={async () => {
+    if (itemToDelete) {
+      await removeFromCart(itemToDelete);
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+    }
+  }}
+  onCancel={() => {
+    setIsDeleteModalOpen(false);
+    setItemToDelete(null);
+  }}
+/>
     </div>
+    
   );
 };
 
