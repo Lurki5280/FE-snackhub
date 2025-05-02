@@ -30,11 +30,13 @@ const Order = () => {
   const [availableWards, setAvailableWards] = useState([]);
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [cartItems, setCartItems] = useState([]);
 
   const fetchCart = async () => {
     try {
       const response = await axiosInstance.get('/api/carts');
       setCart(response.data);
+      setCartItems(response.data.items);
     } catch (error) {
       console.error('Error fetching cart:', error);
       toast.error('Không thể tải thông tin giỏ hàng');
@@ -149,25 +151,42 @@ const Order = () => {
     return subtotal + shippingFee;
   };
 
-  const handleCreateOrder = async () => {
-    if (!selectedAddress) {
-      toast.error('Vui lòng chọn địa chỉ giao hàng');
-      return;
-    }
-
+  const handlePlaceOrder = async () => {
     try {
       setLoading(true);
-      await axiosInstance.post('/api/orders', {
+      const response = await axiosInstance.post("/api/orders", {
         addressId: selectedAddress._id,
-        note,
         paymentMethod,
-        shippingFee: shippingFee
+        note: note,
+        sendEmail: true
       });
-      toast.success('Đặt hàng thành công');
-      navigate('/profile?tab=orders');
+
+      // Clear cart after successful order
+      await axiosInstance.delete("/api/carts");
+      setCartItems([]);
+      localStorage.removeItem("cartItems");
+
+      toast.success("Đặt hàng thành công! Email xác nhận sẽ được gửi đến địa chỉ email của bạn.");
+      
+      // Redirect to success page with order details
+      navigate("/order-success", { 
+        state: { 
+          order: {
+            _id: response.data._id,
+            items: cartItems,
+            totalPrice: cart.totalPrice,
+            shippingFee,
+            discount: cart.discount || 0,
+            totalAmount: calculateTotalAmount()
+          },
+          shippingAddress: selectedAddress
+        } 
+      });
     } catch (error) {
-      console.error('Error creating order:', error);
-      toast.error(error.response?.data?.message || 'Không thể tạo đơn hàng');
+      console.error("Error placing order:", error);
+      toast.error(
+        error.response?.data?.message || "Có lỗi xảy ra khi đặt hàng"
+      );
     } finally {
       setLoading(false);
     }
@@ -214,12 +233,37 @@ const Order = () => {
     fetchAddresses();
   }, [token, navigate]);
 
-  if (!cart || !addresses.length) {
+  if (!cart || loading) {
     return (
       <div className="min-h-screen bg-gray-100 pt-20">
         <div className="container mx-auto px-4">
           <div className="bg-white rounded-lg shadow-md p-6 text-center">
             Đang tải thông tin...
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!addresses || addresses.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-100 pt-20">
+        <div className="container mx-auto px-4">
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="text-center mb-6">
+              <FaMapMarkerAlt className="mx-auto text-4xl text-[#ff784e] mb-4" />
+              <h2 className="text-xl font-semibold mb-2">Bạn chưa có địa chỉ giao hàng</h2>
+              <p className="text-gray-600 mb-4">Vui lòng thêm địa chỉ giao hàng để tiếp tục đặt hàng</p>
+            </div>
+            <div className="flex justify-center">
+              <button
+                onClick={() => navigate('/profile?tab=addresses')}
+                className="bg-[#ff784e] text-white px-6 py-3 rounded-lg hover:bg-[#cc603e] font-semibold flex items-center"
+              >
+                <FaMapMarkerAlt className="mr-2" />
+                Thêm địa chỉ giao hàng
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -545,7 +589,7 @@ const Order = () => {
                   </div>
                 </div>
                 <button
-                  onClick={handleCreateOrder}
+                  onClick={handlePlaceOrder}
                   disabled={loading || !selectedAddress}
                   className="w-full bg-[#ff784e] text-white py-3 rounded-lg font-semibold hover:bg-[#cc603e] disabled:opacity-50"
                 >

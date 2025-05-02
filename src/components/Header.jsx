@@ -29,7 +29,7 @@ const menuItems = [
   {
     label: "FAQs",
     icon: "/assets/faq.png",
-    path: "/faq"
+    path: "/faqs"
   },
   {
     label: "Liên hệ",
