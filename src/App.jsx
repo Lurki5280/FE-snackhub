@@ -12,6 +12,12 @@ import Popular from "./pages/Popular"
 import Profile from "./pages/Profile"
 import CartPage from "./pages/CartPage"
 import Order from "./pages/Order"
+import OrderDetail from "./pages/OrderDetail"
+import OrderSuccess from "./pages/OrderSuccess"
+import FAQs from './pages/FAQs';
+import Contact from './pages/Contact';
+import Shipping from './pages/Shipping';
+import About from './pages/About';
 
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
@@ -49,6 +55,30 @@ const router = createBrowserRouter([
       {
         path: "/order",
         element: <Order />,
+      },
+      {
+        path: "/orders/:id",
+        element: <OrderDetail />,
+      },
+      {
+        path: "/order-success",
+        element: <OrderSuccess />,
+      },
+      {
+        path: "/faqs",
+        element: <FAQs />,
+      },
+      {
+        path: "/contact",
+        element: <Contact />,
+      },
+      {
+        path: "/shipping",
+        element: <Shipping />,
+      },
+      {
+        path: "/about",
+        element: <About />,
       },
     ]
   }

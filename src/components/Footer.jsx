@@ -1,6 +1,7 @@
 import React from 'react';
 import logo from '/assets/Logo.png';
 import { PhoneIcon,EnvelopeIcon,MapPinIcon} from '@heroicons/react/24/solid';
+import { Link } from 'react-router-dom';
 const FacebookIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="100" height="100" viewBox="0 0 100 100">
 <circle cx="52" cy="52" r="44" opacity=".35"></circle><circle cx="50" cy="50" r="44" fill="#f2f2f2"></circle><circle cx="50" cy="50" r="37.5" fill="#70bfff"></circle><path fill="#fff" d="M54.148,59.542h9.316l1.463-9.464H54.146v-5.173c0-3.932,1.285-7.418,4.962-7.418h5.91v-8.259 c-1.038-0.14-3.234-0.447-7.384-0.447c-8.665,0-13.744,4.576-13.744,15.001v6.296h-8.907v9.464h8.907v28.077 c1.764,0.265,3.551,0.445,5.385,0.445c1.658,0,3.276-0.152,4.873-0.368V59.542z"></path><circle cx="50" cy="50" r="37.5" fill="none" stroke="#40396e" stroke-miterlimit="10" stroke-width="3"></circle>
@@ -62,15 +63,15 @@ const Footer = () => {
               <h4 className="text-lg text-gray-900 font-bold mb-9 text-center xl:text-left">Liên Kết Nhanh</h4>
               <div className="flex gap-6 xl:gap-12 max-xl:justify-center">
               <ul className="text-gray-600 transition-all duration-500 grid gap-6">
-                    <li><a href="#">Trang Chủ</a></li>
-                    <li><a href="#">FAQs</a></li>
+                    <li><Link to="/">Trang Chủ</Link></li>
+                    <li><Link to="/faqs"onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>FAQs</Link></li>
                     <li><a href="#">Bảng Giá</a></li>
                     <li><a href="#">Sản Phẩm</a></li>
                 </ul>
                 <ul className="text-gray-600 transition-all duration-500 grid gap-6">
-                    <li><a href="#">Giao Hàng</a></li>
-                    <li><a href="#">Về Chúng Tôi</a></li>
-                    <li><a href="#">Liên Hệ</a></li>
+                    <li><Link to="/shipping" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Giao Hàng</Link></li>
+                    <li><Link to="/about" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Về Chúng Tôi</Link></li>
+                    <li><Link to="/contact" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Liên Hệ</Link></li>
                     <li><a href="#">Quà Tặng</a></li>
                 </ul>
               </div>
@@ -105,7 +106,7 @@ const Footer = () => {
           <div className="py-4">
             <div className="flex items-center justify-center">
               <span className="text-sm text-gray-800">
-                Copyright © 2024 All Right Reserved by{" "}
+                Copyright © 2025 All Right Reserved by{" "}
                 <a href="" className="text-indigo-600">
                   Snackhub
                 </a>

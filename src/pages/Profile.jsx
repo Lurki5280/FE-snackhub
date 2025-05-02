@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { FaUser, FaShoppingCart, FaHistory, FaHeart, FaMapMarkerAlt, FaPlus, FaEdit, FaTrash, FaStar } from 'react-icons/fa';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { FaUser, FaShoppingCart, FaHistory, FaHeart, FaMapMarkerAlt, FaPlus, FaEdit, FaTrash, FaStar, FaClipboardList } from 'react-icons/fa';
 import { getCurrentUser } from '../store/reducers/authReducer';
 import { axiosInstance } from '../config/axiosConfig';
 import { toast } from 'react-toastify';
@@ -9,6 +9,7 @@ import { hcmcDistricts } from '../utils/hcmcData';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const { user, token } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState('profile');
@@ -16,6 +17,13 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
+  const [selectedDistrict, setSelectedDistrict] = useState('');
+  const [availableWards, setAvailableWards] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [addressToDelete, setAddressToDelete] = useState(null);
+  const [showCancelOrderModal, setShowCancelOrderModal] = useState(false);
+  const [orderToCancel, setOrderToCancel] = useState(null);
   const [addressForm, setAddressForm] = useState({
     fullName: '',
     phone: '',
@@ -24,9 +32,15 @@ const Profile = () => {
     specificAddress: '',
     isDefault: false
   });
-  const [selectedDistrict, setSelectedDistrict] = useState('');
-  const [availableWards, setAvailableWards] = useState([]);
-  const [orders, setOrders] = useState([]);
+
+  // Get tab from URL query parameter
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const tab = params.get('tab');
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [location.search]);
 
   const fetchAddresses = async () => {
     try {
@@ -121,13 +135,19 @@ const Profile = () => {
     setShowAddressForm(true);
   };
 
-  const handleDeleteAddress = async (addressId) => {
-    if (!window.confirm('Bạn có chắc muốn xóa địa chỉ này?')) return;
+  const handleDeleteAddress = (addressId) => {
+    setAddressToDelete(addressId);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDeleteAddress = async () => {
     try {
       setLoading(true);
-      await axiosInstance.delete(`/api/users/addresses/${addressId}`);
+      await axiosInstance.delete(`/api/users/addresses/${addressToDelete}`);
       toast.success('Xóa địa chỉ thành công');
       fetchAddresses();
+      setShowDeleteModal(false);
+      setAddressToDelete(null);
     } catch (error) {
       console.error('Error deleting address:', error);
       toast.error('Không thể xóa địa chỉ');
@@ -163,13 +183,19 @@ const Profile = () => {
     }
   };
 
-  const handleCancelOrder = async (orderId) => {
-    if (!window.confirm('Bạn có chắc muốn hủy đơn hàng này?')) return;
+  const handleCancelOrder = (orderId) => {
+    setOrderToCancel(orderId);
+    setShowCancelOrderModal(true);
+  };
+
+  const confirmCancelOrder = async () => {
     try {
       setLoading(true);
-      await axiosInstance.delete(`/api/orders/${orderId}`);
+      await axiosInstance.delete(`/api/orders/${orderToCancel}`);
       toast.success('Hủy đơn hàng thành công');
       fetchOrders();
+      setShowCancelOrderModal(false);
+      setOrderToCancel(null);
     } catch (error) {
       console.error('Error canceling order:', error);
       toast.error('Không thể hủy đơn hàng');
@@ -223,44 +249,60 @@ const Profile = () => {
           <div className="border-b border-gray-200">
             <nav className="flex">
               <button
-                onClick={() => setActiveTab('profile')}
-                className={`px-6 py-3 font-medium ${
+                onClick={() => {
+                  setActiveTab('profile');
+                  navigate('/profile?tab=profile');
+                }}
+                className={`flex items-center px-6 py-3 font-medium ${
                   activeTab === 'profile'
                     ? 'text-[#ff784e] border-b-2 border-[#ff784e]'
                     : 'text-gray-600 hover:text-[#ff784e]'
                 }`}
               >
-                Thông tin cá nhân
+                <FaUser className="mr-2" />
+                <span>Thông tin cá nhân</span>
               </button>
               <button
-                onClick={() => setActiveTab('addresses')}
-                className={`px-6 py-3 font-medium ${
+                onClick={() => {
+                  setActiveTab('addresses');
+                  navigate('/profile?tab=addresses');
+                }}
+                className={`flex items-center px-6 py-3 font-medium ${
                   activeTab === 'addresses'
                     ? 'text-[#ff784e] border-b-2 border-[#ff784e]'
                     : 'text-gray-600 hover:text-[#ff784e]'
                 }`}
               >
-                Địa chỉ
+                <FaMapMarkerAlt className="mr-2" />
+                <span>Địa chỉ</span>
               </button>
               <button
-                onClick={() => setActiveTab('orders')}
-                className={`px-6 py-3 font-medium ${
+                onClick={() => {
+                  setActiveTab('orders');
+                  navigate('/profile?tab=orders');
+                }}
+                className={`flex items-center px-6 py-3 font-medium ${
                   activeTab === 'orders'
                     ? 'text-[#ff784e] border-b-2 border-[#ff784e]'
                     : 'text-gray-600 hover:text-[#ff784e]'
                 }`}
               >
-                Đơn hàng
+                <FaClipboardList className="mr-2" />
+                <span>Đơn hàng</span>
               </button>
               <button
-                onClick={() => setActiveTab('favorites')}
-                className={`px-6 py-3 font-medium ${
+                onClick={() => {
+                  setActiveTab('favorites');
+                  navigate('/profile?tab=favorites');
+                }}
+                className={`flex items-center px-6 py-3 font-medium ${
                   activeTab === 'favorites'
                     ? 'text-[#ff784e] border-b-2 border-[#ff784e]'
                     : 'text-gray-600 hover:text-[#ff784e]'
                 }`}
               >
-                Yêu thích
+                <FaHeart className="mr-2" />
+                <span>Yêu thích</span>
               </button>
             </nav>
           </div>
@@ -499,88 +541,69 @@ const Profile = () => {
             {activeTab === 'orders' && (
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
-                  <FaHistory className="text-[#ff784e]" />
-                  <span className="font-medium">Lịch sử đơn hàng</span>
+                  <FaClipboardList className="text-[#ff784e]" />
+                  <span className="font-medium">Đơn hàng của tôi</span>
                 </div>
-                <div className="space-y-4">
-                  {loading ? (
-                    <div className="text-center py-4">Đang tải...</div>
-                  ) : (
-                    <div className="grid grid-cols-1 gap-4">
-                      {orders?.map((order) => (
-                        <div key={order._id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <div className="flex justify-between items-start mb-4">
-                            <div>
-                              <p className="font-medium">Mã đơn hàng: {order._id}</p>
-                              <p className="text-sm text-gray-600">
-                                Ngày đặt: {new Date(order.orderDate).toLocaleDateString('vi-VN', {
-                                  day: '2-digit',
-                                  month: '2-digit',
-                                  year: 'numeric'
-                                })}
-                              </p>
-                            </div>
-                            <div className="text-right">
-                              <p className="font-medium text-[#ff784e]">
-                                {(order.totalAmount || 0).toLocaleString('vi-VN')}đ
-                              </p>
-                              <p className={`text-sm ${
-                                order.orderStatus === 'pending' ? 'text-yellow-600' :
-                                order.orderStatus === 'completed' ? 'text-green-600' :
-                                order.orderStatus === 'cancelled' ? 'text-red-600' :
-                                'text-gray-600'
-                              }`}>
-                                {order.orderStatus === 'pending' ? 'Đang xử lý' :
-                                 order.orderStatus === 'completed' ? 'Đã hoàn thành' :
-                                 order.orderStatus === 'cancelled' ? 'Đã hủy' :
-                                 order.orderStatus}
-                              </p>
-                            </div>
+                {loading ? (
+                  <div className="text-center py-4">Đang tải...</div>
+                ) : orders.length === 0 ? (
+                  <div className="text-center py-4">Bạn chưa có đơn hàng nào</div>
+                ) : (
+                  <div className="space-y-4">
+                    {orders.map((order) => (
+                      <div key={order._id} className="border rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-4">
+                          <div>
+                            <p className="font-medium">Đơn hàng #{order._id}</p>
+                            <p className="text-sm text-gray-500">
+                              {new Date(order.orderDate).toLocaleDateString('vi-VN')}
+                            </p>
                           </div>
-                          
-                          <div className="space-y-2">
-                            {order.items?.map((item) => (
-                              <div key={item._id} className="flex justify-between items-center py-2 border-b">
-                                <div className="flex items-center space-x-2">
-                                  <img 
-                                    src={item.snackId?.images} 
-                                    alt={item.snackId?.snackName}
-                                    className="w-12 h-12 object-cover rounded"
-                                  />
-                                  <div>
-                                    <p className="font-medium">{item.snackId?.snackName}</p>
-                                    <p className="text-sm text-gray-600">
-                                      {item.quantity} x {(item.price || 0).toLocaleString('vi-VN')}đ
-                                    </p>
-                                  </div>
+                          <div className={`px-3 py-1 rounded-full text-sm ${
+                            order.orderStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            order.orderStatus === 'processing' ? 'bg-gray-100 text-blue-800' :
+                            order.orderStatus === 'shipping' ? 'bg-cyan-100 text-cyan-800' :
+                            order.orderStatus === 'delivered' ? 'bg-green-100 text-green-800' :
+                            order.orderStatus === 'cancelled' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {order.orderStatus === 'pending' ? 'Chờ xử lý' :
+                             order.orderStatus === 'processing' ? 'Đang xử lý' :
+                             order.orderStatus === 'shipping' ? 'Đang giao hàng' :
+                             order.orderStatus === 'delivered' ? 'Đã hoàn thành' :
+                             order.orderStatus === 'cancelled' ? 'Đã hủy' :
+                             order.orderStatus}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          {order.items?.map((item) => (
+                            <div key={item._id} className="flex justify-between items-center py-2 border-b">
+                              <div className="flex items-center space-x-2">
+                                <img 
+                                  src={item.snackId?.images?.[0]} 
+                                  alt={item.snackId?.snackName}
+                                  className="w-12 h-12 object-cover rounded"
+                                />
+                                <div>
+                                  <p className="font-medium">{item.snackId?.snackName}</p>
+                                  <p className="text-sm text-gray-600">
+                                    {item.quantity} x {(item.price || 0).toLocaleString('vi-VN')}đ
+                                  </p>
                                 </div>
-                                <p className="font-medium">
-                                  {((item.price || 0) * (item.quantity || 0)).toLocaleString('vi-VN')}đ
-                                </p>
                               </div>
-                            ))}
-                          </div>
-                          
-                          <div className="mt-4 pt-4 border-t">
-                            <div className="flex justify-between text-sm">
-                              <span>Phí vận chuyển:</span>
-                              <span>{(order.shippingFee || 0).toLocaleString('vi-VN')}đ</span>
+                              <p className="font-medium">
+                                {((item.price || 0) * (item.quantity || 0)).toLocaleString('vi-VN')}đ
+                              </p>
                             </div>
-                            {order.couponApplied && (
-                              <div className="flex justify-between text-sm text-green-600">
-                                <span>Giảm giá:</span>
-                                <span>-{(order.couponApplied.discount || 0).toLocaleString('vi-VN')}đ</span>
-                              </div>
-                            )}
-                            <div className="flex justify-between font-medium mt-2">
-                              <span>Tổng cộng:</span>
-                              <span className="text-[#ff784e]">
-                                {(order.totalAmount || 0).toLocaleString('vi-VN')}đ
-                              </span>
-                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-4 flex justify-between items-center">
+                          <div className="text-lg font-semibold">
+                            Tổng cộng: <span className="text-[#ff784e]">{(order.totalAmount || 0).toLocaleString('vi-VN')}đ</span>
                           </div>
-                          
-                          <div className="mt-4 flex justify-end">
+                          <div className="flex space-x-2">
                             {order.orderStatus === 'pending' && (
                               <button
                                 onClick={() => handleCancelOrder(order._id)}
@@ -589,12 +612,18 @@ const Profile = () => {
                                 Hủy đơn hàng
                               </button>
                             )}
+                            <Link
+                              to={`/orders/${order._id}`}
+                              className="px-4 py-2 text-sm text-white bg-[#ff784e] hover:bg-[#cc603e] rounded-md transition-colors"
+                            >
+                              Xem chi tiết
+                            </Link>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -610,6 +639,64 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Delete Address Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium mb-4">Xác nhận xóa địa chỉ</h3>
+            <p className="text-gray-600 mb-6">Bạn có chắc chắn muốn xóa địa chỉ này? Hành động này không thể hoàn tác.</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setAddressToDelete(null);
+                }}
+                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
+                disabled={loading}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmDeleteAddress}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                disabled={loading}
+              >
+                {loading ? 'Đang xóa...' : 'Xóa'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cancel Order Confirmation Modal */}
+      {showCancelOrderModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium mb-4">Xác nhận hủy đơn hàng</h3>
+            <p className="text-gray-600 mb-6">Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowCancelOrderModal(false);
+                  setOrderToCancel(null);
+                }}
+                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
+                disabled={loading}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmCancelOrder}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                disabled={loading}
+              >
+                {loading ? 'Đang hủy...' : 'Hủy đơn hàng'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

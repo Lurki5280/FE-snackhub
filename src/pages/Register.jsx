@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { register } from "../store/reducers/authReducer"; // Adjust the import path as necessary
 import { Link } from "react-router-dom";
+import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 
 const Register = () => {
   const dispatch = useDispatch();
@@ -17,6 +18,9 @@ const Register = () => {
     confirmPassword: "",
     phone: "",
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const handleChange = (e) => {
     setFormData({
@@ -56,9 +60,9 @@ const Register = () => {
           </h2>
           <form onSubmit={handleSubmit} className="mt-4 space-y-4">
             <div className="flex gap-4">
-              <div>
+              <div className="w-1/2">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Họ 
+                  Họ
                 </label>
                 <input
                   type="text"
@@ -69,7 +73,7 @@ const Register = () => {
                   required
                 />
               </div>
-              <div>
+              <div className="w-1/2">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
                   Tên
                 </label>
@@ -112,38 +116,64 @@ const Register = () => {
               />
             </div>
             <div className="flex gap-4">
-              <div>
+              <div className="w-1/2">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Mật khẩu 
+                  Mật khẩu
                 </label>
-                <input
-                  type="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  >
+                    {showPassword ? (
+                      <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                    ) : (
+                      <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                    )}
+                  </button>
+                </div>
               </div>
-              <div>
+              <div className="w-1/2">
                 <label className="block text-gray-700 text-sm font-bold mb-2">
                   Xác nhận mật khẩu
                 </label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none"
-                  required
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="bg-gray-200 text-gray-700 focus:outline-none focus:shadow-outline border border-gray-300 rounded py-2 px-4 block w-full appearance-none pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                  >
+                    {showConfirmPassword ? (
+                      <FaEyeSlash className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                    ) : (
+                      <FaEye className="h-5 w-5 text-gray-400 hover:text-gray-500" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
             <div className="mt-8">
               <button
                 type="submit"
                 disabled={loading === "loading"}
-                className="group relative w-full flex justify-center py-2 px-4 border text-xs border-transparent rounded-md text-white bg-[#9C3F46] hover:bg-[#9C7376] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:bg-[#9C8486]"
+                className="bg-[#9C3F46] text-white text-sm font-bold py-2 px-4 w-full rounded hover:bg-[#9C7376] focus:outline-none focus:shadow-outline disabled:bg-[#9C8486]"
               >
                 {loading === "loading" ? "Đang đăng ký..." : "Đăng ký"}
               </button>
