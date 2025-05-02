@@ -22,7 +22,6 @@ export const login = createAsyncThunk("api/auth/login", async (formData, { rejec
       token: data.token,
     };
   } catch (error) {
-    console.log("🛑 Lỗi API login:", error.response);
     return rejectWithValue(
       error.response?.data?.message || error.message || "Đăng nhập thất bại!"
     );

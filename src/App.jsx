@@ -12,7 +12,9 @@ import Popular from "./pages/Popular"
 import Profile from "./pages/Profile"
 import CartPage from "./pages/CartPage"
 import Order from "./pages/Order"
-
+import "swiper/css/navigation";
+import "swiper/css";
+import "swiper/css/pagination";
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {

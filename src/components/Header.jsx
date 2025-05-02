@@ -1,10 +1,11 @@
-import React, { useState } from "react"
+import React, { useState,useEffect} from "react"
 import { Link, NavLink, useNavigate } from "react-router-dom"
 import { HiBars3, HiXMark } from "react-icons/hi2"
 import { FaUserCircle } from "react-icons/fa"
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../store/reducers/authReducer";
-
+import {ShoppingCartIcon} from "@heroicons/react/24/outline";
+import { fetchCart } from "../store/reducers/cartReducer";
 const menuItems = [
   {
     label: "Bán chạy nhất",
@@ -44,12 +45,17 @@ function Header() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user, token } = useSelector((state) => state.auth);
-
+  const cart = useSelector((state) => state.cart.cart);
   const handleLogout = () => {
     dispatch(logout());
     navigate('/login');
   };
-
+  useEffect(() => {
+    if (user && token) {
+      dispatch(fetchCart({ token }));
+    }
+  }, [user, token, dispatch]);
+  const cartItemCount = cart?.items?.length || 0;
   return (
     <>
       {isOpen && (
@@ -105,8 +111,16 @@ function Header() {
                 Khám phá
               </Link>
             </div>
-            
-            {/* Avatar with dropdown */}
+            {user && (
+                <Link to="/cart" className="relative">
+                  <ShoppingCartIcon className="h-7 w-7" />
+                  {cartItemCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                      {cartItemCount}
+                    </span>
+                  )}
+                </Link>
+              )}
             <div className="relative">
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -115,8 +129,6 @@ function Header() {
                 <FaUserCircle className="text-[#ff784e] text-3xl" />
                 {user && <span className="hidden md:block text-sm font-medium">{user.firstName}</span>}
               </button>
-
-              {/* Dropdown menu */}
               {isProfileOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                   {user ? (

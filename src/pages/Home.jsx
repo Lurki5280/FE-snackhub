@@ -1,73 +1,84 @@
 import React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useState} from "react"
 import { Link } from "react-router-dom"
 import AdsLogo from "../components/AdsLogo"
-import {getAllSnacks} from "../api/snacks"
-import FeaturedSnacks from "../components/FeaturedSnacks"
+import PromoTicker from "../components/Banner"
+import { getAllCategories } from "../api/categories"
 import Spinner from "../components/Spinner"
+import SnackList from "./SnackList"
 function Home() {
   const [snacks, setSnacks] = useState([])
   const [loading, setLoading] = useState(true)
+  const [categories, setCategories] = useState([]);
 
-  useEffect(() => {
-    const fetchSnacks = async () => {
-      try {
-        const data = await getAllSnacks()
-        setSnacks(data)
-      } catch (error) {
-        console.error("Failed to fetch snacks:", error)
-      } finally {
-        setLoading(false)
-      }
+  const loadCategories = async () => {
+    setLoading(true);
+    try {
+      const response = await getAllCategories(); 
+      setCategories(response);
+    } catch (error) {
+      console.error("Error loading categories:", error);
+    } finally {
+      setLoading(false);
     }
+  };
+  useEffect(() => {
+    const handleResize = () => {
+      if (sliderRef.current && sliderRef.current.swiper) {
+        sliderRef.current.swiper.update();
+      }
+    };
+    loadCategories();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-    fetchSnacks()
-  }, [])
   return (
-    <section className="bg-gradient-to-b from-yellow-50 to-white min-h-screen flex flex-col items-center justify-center text-center">
-    <div className="relative max-w-2xl items-center mr-auto p-6 md:m-20">
-      <h1 className="text-3xl md:text-4xl font-punch text-orange-600 max-w-2xl leading-tight">
-      Vị ngon từng vùng – đến tay mỗi tháng!
-      </h1>
-      <p className="mt-6 font-punch text-lg text-gray-700 max-w-xl">
-      Khám phá hương vị Việt Nam từ Bắc chí Nam — cùng hàng ngàn người yêu thích đồ ăn vặt và văn hóa địa phương!
-      </p>
-      <Link
-        to="/popular"
-        className="mt-6 inline-block bg-orange-500 text-white px-6 py-3 bg-[#ff784e] rounded-full hover:bg-[#cc603e] transition border-4 border-[#3F3F3F]"
-      >
-        Khám phá
-      </Link>
-      <Link
-        to="/subscribe"
-        className="ml-6 mt-6 inline-block bg-orange-500 text-white px-6 py-3 bg-red-400 text-black rounded-full hover:bg-red-500 transition border-4 border-black"
-      >
-        Quà tặng
-      </Link>
-      </div>
-      <AdsLogo></AdsLogo>
-      <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4 text-center">Tất cả Sản Phẩm</h1>
+    <section>
+    <div
+  className="relative w-full bg-cover bg-center text-white py-24 px-6 md:px-12 rounded-xl shadow-lg"
+  style={{ backgroundImage: "url('/assets/banner.jpg')" }}
+>
+        <div className="bg-black bg-opacity-50 p-6 rounded-xl max-w-2xl mx-auto text-center">
+          <h1 className="text-3xl md:text-4xl font-punch text-orange-300 leading-tight">
+            Vị ngon từng vùng – đến tay mỗi tháng!
+          </h1>
+          <p className="mt-6 font-punch text-lg text-white">
+            Khám phá hương vị Việt Nam từ Bắc chí Nam — cùng hàng ngàn người yêu thích đồ ăn vặt và văn hóa địa phương!
+          </p>
 
-      {loading ? (
-        <Spinner></Spinner>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {snacks.map((snack) => (
+          <div className="mt-6 flex flex-wrap justify-center gap-4">
             <Link
-            to={`/product/${snack._id}`}
-            key={snack._id}
-            className="bg-white shadow rounded-xl p-4 hover:shadow-lg transition block"
-          >
-              <h2 className="text-xl font-semibold">{snack.snackName}</h2>
-              <p className="text-sm text-gray-600 mt-2">{snack.description}</p>
-              {snack.images && (
-                <img src={snack.images} alt={snack.name} className="w-full h-40 object-cover rounded-lg mt-3" />
-              )}
+              to="/popular"
+              className="bg-[#ff784e] text-white px-6 py-3 rounded-full hover:bg-[#cc603e] transition border-4 border-[#3F3F3F]"
+            >
+              Khám phá
             </Link>
-          ))}
+            <Link
+              to="/subscribe"
+              className="bg-red-400 text-black px-6 py-3 rounded-full hover:bg-red-500 transition border-4 border-black"
+            >
+              Quà tặng
+            </Link>
+          </div>
         </div>
-      )}
+      </div>
+
+      <AdsLogo></AdsLogo>
+      <PromoTicker/>
+      <div className="mt-8 px-4">
+      <h1 className="text-3xl font-bold mb-4 text-center">Tất cả sản phẩm</h1>
+      {loading ? (
+            <Spinner/>
+          ) : (
+            categories.map((category) => (
+              <div key={category.categoryId} className="mb-12">
+                <h3 className="text-2xl font-semibold mb-4">{category.categoryName}</h3>
+                <SnackList categoryId={category.categoryId} />
+              </div>
+            ))
+          )}
+      
     </div>
     </section>
     
