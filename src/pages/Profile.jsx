@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { FaUser, FaShoppingCart, FaHistory, FaHeart, FaMapMarkerAlt, FaPlus, FaEdit, FaTrash, FaStar, FaClipboardList } from 'react-icons/fa';
+import { FaUser, FaShoppingCart, FaHistory, FaHeart, FaMapMarkerAlt, FaPlus, FaEdit, FaTrash, FaStar, FaClipboardList, FaComment } from 'react-icons/fa';
 import { getCurrentUser } from '../store/reducers/authReducer';
 import { axiosInstance } from '../config/axiosConfig';
 import { toast } from 'react-toastify';
 import { hcmcDistricts } from '../utils/hcmcData';
+import { getUserReviews, updateReview, deleteReview } from '../api/reviews';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -20,10 +21,18 @@ const Profile = () => {
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [availableWards, setAvailableWards] = useState([]);
   const [orders, setOrders] = useState([]);
+  const [reviews, setReviews] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState(null);
   const [showCancelOrderModal, setShowCancelOrderModal] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState(null);
+  const [showDeleteReviewModal, setShowDeleteReviewModal] = useState(false);
+  const [reviewToDelete, setReviewToDelete] = useState(null);
+  const [editingReview, setEditingReview] = useState(null);
+  const [reviewForm, setReviewForm] = useState({
+    rating: 5,
+    comment: ""
+  });
   const [addressForm, setAddressForm] = useState({
     fullName: '',
     phone: '',
@@ -204,6 +213,71 @@ const Profile = () => {
     }
   };
 
+  const fetchReviews = async () => {
+    try {
+      setLoading(true);
+      const data = await getUserReviews();
+      setReviews(data);
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      toast.error('Không thể tải danh sách đánh giá');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditReview = (review) => {
+    setEditingReview(review);
+    setReviewForm({
+      rating: review.rating,
+      comment: review.comment
+    });
+  };
+
+  const handleCancelEditReview = () => {
+    setEditingReview(null);
+    setReviewForm({
+      rating: 5,
+      comment: ""
+    });
+  };
+
+  const handleUpdateReview = async () => {
+    try {
+      setLoading(true);
+      await updateReview(editingReview._id, reviewForm);
+      toast.success('Cập nhật đánh giá thành công');
+      fetchReviews();
+      setEditingReview(null);
+    } catch (error) {
+      console.error('Error updating review:', error);
+      toast.error('Không thể cập nhật đánh giá');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteReview = (reviewId) => {
+    setReviewToDelete(reviewId);
+    setShowDeleteReviewModal(true);
+  };
+
+  const confirmDeleteReview = async () => {
+    try {
+      setLoading(true);
+      await deleteReview(reviewToDelete);
+      toast.success('Xóa đánh giá thành công');
+      fetchReviews();
+      setShowDeleteReviewModal(false);
+      setReviewToDelete(null);
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      toast.error('Không thể xóa đánh giá');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!token) {
       navigate('/login');
@@ -215,12 +289,10 @@ const Profile = () => {
   useEffect(() => {
     if (activeTab === 'addresses') {
       fetchAddresses();
-    }
-  }, [activeTab]);
-
-  useEffect(() => {
-    if (activeTab === 'orders') {
+    } else if (activeTab === 'orders') {
       fetchOrders();
+    } else if (activeTab === 'reviews') {
+      fetchReviews();
     }
   }, [activeTab]);
 
@@ -246,7 +318,7 @@ const Profile = () => {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="border-b border-gray-200">
+          <div className="border-b border-gray-200 overflow-x-auto">
             <nav className="flex">
               <button
                 onClick={() => {
@@ -289,6 +361,20 @@ const Profile = () => {
               >
                 <FaClipboardList className="mr-2" />
                 <span>Đơn hàng</span>
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab('reviews');
+                  navigate('/profile?tab=reviews');
+                }}
+                className={`flex items-center px-6 py-3 font-medium ${
+                  activeTab === 'reviews'
+                    ? 'text-[#ff784e] border-b-2 border-[#ff784e]'
+                    : 'text-gray-600 hover:text-[#ff784e]'
+                }`}
+              >
+                <FaComment className="mr-2" />
+                <span>Đánh giá sản phẩm</span>
               </button>
               <button
                 onClick={() => {
@@ -627,6 +713,144 @@ const Profile = () => {
               </div>
             )}
 
+            {activeTab === 'reviews' && (
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <FaComment className="text-[#ff784e]" />
+                  <span className="font-medium">Đánh giá sản phẩm của tôi</span>
+                </div>
+                
+                {loading ? (
+                  <div className="text-center py-4">Đang tải...</div>
+                ) : reviews.length === 0 ? (
+                  <div className="text-center py-4 bg-gray-50 rounded-lg p-8">
+                    <FaComment className="text-gray-300 text-5xl mx-auto mb-4" />
+                    <p className="text-gray-500">Bạn chưa có đánh giá nào</p>
+                    <Link to="/" className="mt-4 inline-block px-4 py-2 bg-[#ff784e] text-white rounded-lg hover:bg-[#cc603e]">
+                      Khám phá sản phẩm
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {reviews.map((review) => (
+                      <div key={review._id} className="border rounded-lg p-4 hover:shadow-md transition-all">
+                        {editingReview && editingReview._id === review._id ? (
+                          <div className="bg-gray-50 p-4 rounded-lg">
+                            <div className="flex items-center mb-4">
+                              <span className="mr-2">Đánh giá:</span>
+                              <div className="flex">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <button
+                                    key={star}
+                                    type="button"
+                                    onClick={() => setReviewForm({ ...reviewForm, rating: star })}
+                                    className="text-2xl"
+                                  >
+                                    <FaStar className={star <= reviewForm.rating ? 'text-yellow-400' : 'text-gray-300'} />
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            <div className="mb-4">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Bình luận
+                              </label>
+                              <textarea
+                                value={reviewForm.comment}
+                                onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                                className="w-full p-2 border rounded-lg focus:ring-[#ff784e] focus:border-[#ff784e]"
+                                rows="3"
+                                required
+                              />
+                            </div>
+                            
+                            <div className="flex justify-end space-x-2">
+                              <button
+                                onClick={handleCancelEditReview}
+                                className="px-3 py-1 border rounded text-gray-600 hover:bg-gray-100"
+                              >
+                                Hủy
+                              </button>
+                              <button
+                                onClick={handleUpdateReview}
+                                disabled={loading}
+                                className="px-3 py-1 bg-[#ff784e] text-white rounded hover:bg-[#cc603e] disabled:opacity-50"
+                              >
+                                {loading ? 'Đang cập nhật...' : 'Cập nhật'}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex justify-between">
+                              <div>
+                                <Link to={`/product/${review.snackId?._id}`} className="font-medium text-lg hover:text-[#ff784e]">
+                                  {review.snackId?.snackName || 'Sản phẩm không tồn tại'}
+                                </Link>
+                                <div className="flex items-center mt-1">
+                                  {[...Array(5)].map((_, index) => (
+                                    <FaStar
+                                      key={index}
+                                      className={index < review.rating ? 'text-yellow-400' : 'text-gray-300'}
+                                    />
+                                  ))}
+                                  <span className="text-sm text-gray-500 ml-2">
+                                    {new Date(review.createdAt).toLocaleDateString('vi-VN')}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleEditReview(review)}
+                                  className="text-blue-600 hover:text-blue-800"
+                                >
+                                  <FaEdit />
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteReview(review._id)}
+                                  className="text-red-600 hover:text-red-800"
+                                >
+                                  <FaTrash />
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <div className="mt-3">
+                              <p className="text-gray-700">{review.comment}</p>
+                            </div>
+                            
+                            {review.snackId && (
+                              <div className="mt-4 pt-3 border-t flex items-center">
+                                <Link to={`/product/${review.snackId._id}`} className="flex items-center">
+                                  <img
+                                    src={Array.isArray(review.snackId.images) 
+                                      ? review.snackId.images[0] 
+                                      : review.snackId.images || 'https://via.placeholder.com/150?text=Không+có+ảnh'
+                                    }
+                                    alt={review.snackId.snackName}
+                                    className="w-16 h-16 object-cover rounded"
+                                    onError={(e) => {
+                                      e.target.onerror = null;
+                                      e.target.src = 'https://via.placeholder.com/150?text=Không+có+ảnh';
+                                    }}
+                                  />
+                                  <div className="ml-3">
+                                    <p className="font-medium">{review.snackId.snackName}</p>
+                                    <p className="text-sm text-gray-500">Xem sản phẩm</p>
+                                  </div>
+                                </Link>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {activeTab === 'favorites' && (
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
@@ -692,6 +916,35 @@ const Profile = () => {
                 disabled={loading}
               >
                 {loading ? 'Đang hủy...' : 'Hủy đơn hàng'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Review Confirmation Modal */}
+      {showDeleteReviewModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-medium mb-4">Xác nhận xóa đánh giá</h3>
+            <p className="text-gray-600 mb-6">Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể hoàn tác.</p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => {
+                  setShowDeleteReviewModal(false);
+                  setReviewToDelete(null);
+                }}
+                className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-50"
+                disabled={loading}
+              >
+                Hủy
+              </button>
+              <button
+                onClick={confirmDeleteReview}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                disabled={loading}
+              >
+                {loading ? 'Đang xóa...' : 'Xóa'}
               </button>
             </div>
           </div>
