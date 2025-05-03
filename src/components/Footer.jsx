@@ -24,7 +24,7 @@ const FacebookIcon = () => (
   );
 const Footer = () => {
     return (
-      <footer className="w-full mt-5">
+      <footer className="w-full mt-5 bg-amber-50 text-gray-800">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ">
           <div className="py-14 grid grid-cols-12 gap-x-5 gap-y-8">
             <div className="col-span-full xl:col-span-3 relative bg-[#FDEDEC] border-2 border-black rounded-2xl gap-12 p-6 xl:w-72 h-96 flex flex-col justify-center items-center">
@@ -52,23 +52,23 @@ const Footer = () => {
                 </div>
             </div>
             <div className="block text-center xl:text-left xl:py-16 col-span-full min-[500px]:col-span-6 md:col-span-4 xl:col-span-3 xl:pl-5">
-              <h4 className="text-lg text-gray-900 font-bold mb-9">Liên hệ</h4>
-              <ul className="text-gray-600 transition-all duration-500 grid gap-6 text-ms">
+              <h4 className="text-lg text-gray-800 font-bold mb-9">Liên hệ</h4>
+              <ul className="text-gray-700 transition-all duration-500 grid gap-6 text-ms">
                 <li className='flex flex-row items-center gap-1'><EnvelopeIcon className='w-7'/>snack-hub@store.com</li>
                 <li className='flex flex-row items-center gap-1'><PhoneIcon className='w-6'/> 1900 1008 </li>
                 <li className='flex flex-row items-center gap-1'><MapPinIcon className='w-12'/> Khu phố 6, Phường Linh Trung, Thành phố Thủ Đức, Thành phố Hồ Chí Minh.</li>
               </ul>
             </div>
             <div className="block xl:py-16 col-span-full min-[500px]:col-span-6 md:col-span-4 xl:col-span-3">
-              <h4 className="text-lg text-gray-900 font-bold mb-9 text-center xl:text-left">Liên Kết Nhanh</h4>
+              <h4 className="text-lg text-gray-800 font-bold mb-9 text-center xl:text-left">Liên Kết Nhanh</h4>
               <div className="flex gap-6 xl:gap-12 max-xl:justify-center">
-              <ul className="text-gray-600 transition-all duration-500 grid gap-6">
+              <ul className="text-gray-700 transition-all duration-500 grid gap-6">
                     <li><Link to="/">Trang Chủ</Link></li>
                     <li><Link to="/faqs"onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>FAQs</Link></li>
                     <li><a href="#">Bảng Giá</a></li>
                     <li><a href="#">Sản Phẩm</a></li>
                 </ul>
-                <ul className="text-gray-600 transition-all duration-500 grid gap-6">
+                <ul className="text-gray-700 transition-all duration-500 grid gap-6">
                     <li><Link to="/shipping" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Giao Hàng</Link></li>
                     <li><Link to="/about" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Về Chúng Tôi</Link></li>
                     <li><Link to="/contact" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>Liên Hệ</Link></li>
@@ -77,7 +77,7 @@ const Footer = () => {
               </div>
             </div>
             <div className="block xl:py-16 col-span-full md:col-span-4 xl:col-span-3">
-              <h4 className="text-lg text-gray-900 font-bold mb-9 text-center xl:text-left">Thông báo</h4>
+              <h4 className="text-lg text-gray-800 font-bold mb-9 text-center xl:text-left">Thông báo</h4>
               <div className="grid gap-7">
                 <input
                   type="text"
@@ -103,11 +103,11 @@ const Footer = () => {
               </div>
             </div>
           </div>
-          <div className="py-4">
+          <div className="py-4 border-t border-amber-200">
             <div className="flex items-center justify-center">
-              <span className="text-sm text-gray-800">
+              <span className="text-sm text-gray-700">
                 Copyright © 2025 All Right Reserved by{" "}
-                <a href="" className="text-indigo-600">
+                <a href="" className="text-amber-700 hover:text-amber-500">
                   Snackhub
                 </a>
               </span>
