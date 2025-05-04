@@ -3,9 +3,10 @@ import { Link, NavLink, useNavigate } from "react-router-dom"
 import { HiBars3, HiXMark } from "react-icons/hi2"
 import { FaUserCircle } from "react-icons/fa"
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../store/reducers/authReducer";
+import { logout, getSnackPoints } from "../store/reducers/authReducer";
 import {ShoppingCartIcon} from "@heroicons/react/24/outline";
 import { fetchCart } from "../store/reducers/cartReducer";
+import { BiCoin } from "react-icons/bi";
 const menuItems = [
   {
     label: "Bán chạy nhất",
@@ -53,6 +54,7 @@ function Header() {
   useEffect(() => {
     if (user && token) {
       dispatch(fetchCart({ token }));
+      dispatch(getSnackPoints());
     }
   }, [user, token, dispatch]);
   const cartItemCount = cart?.items?.length || 0;
@@ -112,6 +114,11 @@ function Header() {
               </Link>
             </div>
             {user && (
+              <>
+                <div className="hidden md:flex items-center bg-yellow-100 rounded-full px-3 py-1 text-yellow-700">
+                  <BiCoin className="text-yellow-500 mr-1" size={18} />
+                  <span className="font-medium">{user.snackPoints?.toLocaleString('vi-VN') || 0}</span>
+                </div>
                 <Link to="/cart" className="relative">
                   <ShoppingCartIcon className="h-7 w-7" />
                   {cartItemCount > 0 && (
@@ -120,7 +127,8 @@ function Header() {
                     </span>
                   )}
                 </Link>
-              )}
+              </>
+            )}
             <div className="relative">
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}

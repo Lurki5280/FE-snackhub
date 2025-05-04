@@ -26,7 +26,6 @@ const Shipping = () => {
       title: 'Phí giao hàng',
       content: [
         'Miễn phí giao hàng cho đơn từ 200.000đ (nội thành)',
-        'Miễn phí giao hàng cho đơn từ 500.000đ (toàn quốc)',
         'Phí giao hàng tiêu chuẩn: 15.000đ - 30.000đ',
       ]
     },
