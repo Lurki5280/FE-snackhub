@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { authLogin as apiLogin, authRegister as apiRegister } from "../../api/auth";
+import { authLogin as apiLogin, authRegister as apiRegister, getSnackPoints as apiGetSnackPoints, loadSnackPoints as apiLoadSnackPoints } from "../../api/auth";
 import { axiosInstance } from "../../config/axiosConfig";
 
 export const getCurrentUser = createAsyncThunk(
@@ -45,6 +45,34 @@ export const register = createAsyncThunk("api/auth/register", async (formData, {
     return rejectWithValue(error.response?.data || error.message || "Đăng ký thất bại!");
   }
 });
+
+export const getSnackPoints = createAsyncThunk(
+  "api/auth/getSnackPoints",
+  async (_, { rejectWithValue }) => {
+    try {
+      const data = await apiGetSnackPoints();
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.message || "Không thể lấy thông tin SnackPoints"
+      );
+    }
+  }
+);
+
+export const loadSnackPoints = createAsyncThunk(
+  "api/auth/loadSnackPoints",
+  async (amount, { rejectWithValue }) => {
+    try {
+      const data = await apiLoadSnackPoints(amount);
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.message || "Không thể nạp SnackPoints"
+      );
+    }
+  }
+);
 
 const initialState = {
   user: null,
@@ -103,6 +131,32 @@ const authSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(getCurrentUser.rejected, (state, action) => {
+        state.loading = "idle";
+        state.error = action.payload;
+      })
+      .addCase(getSnackPoints.pending, (state) => {
+        state.loading = "loading";
+      })
+      .addCase(getSnackPoints.fulfilled, (state, action) => {
+        state.loading = "idle";
+        if (state.user) {
+          state.user.snackPoints = action.payload.snackPoints;
+        }
+      })
+      .addCase(getSnackPoints.rejected, (state, action) => {
+        state.loading = "idle";
+        state.error = action.payload;
+      })
+      .addCase(loadSnackPoints.pending, (state) => {
+        state.loading = "loading";
+      })
+      .addCase(loadSnackPoints.fulfilled, (state, action) => {
+        state.loading = "idle";
+        if (state.user) {
+          state.user.snackPoints = action.payload.currentPoints;
+        }
+      })
+      .addCase(loadSnackPoints.rejected, (state, action) => {
         state.loading = "idle";
         state.error = action.payload;
       });

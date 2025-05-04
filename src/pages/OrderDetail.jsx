@@ -164,18 +164,17 @@ function OrderDetail() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Phí vận chuyển:</span>
                   <span>
-                    {order.addressId?.ward?.toLowerCase().includes('linh') ? 'Miễn phí' :
-                     (order.addressId?.ward?.toLowerCase().includes('hiep') || 
-                      order.addressId?.ward?.toLowerCase().includes('long') || 
-                      order.addressId?.ward?.toLowerCase().includes('phuoc') || 
-                      order.addressId?.ward?.toLowerCase().includes('phước')) ? '20,000đ' :
-                     '30,000đ'}
+                    {(order.shippingFee === 0) ? (
+                      <span className="text-green-600">Miễn phí</span>
+                    ) : (
+                      `${(order.shippingFee || 0).toLocaleString('vi-VN')}đ`
+                    )}
                   </span>
                 </div>
-                {order.couponApplied && (
+                {(order.couponApplied?.discount || order.discount || 0) > 0 && (
                   <div className="flex justify-between text-sm text-green-600">
-                    <span>Giảm giá:</span>
-                    <span>-{(order.couponApplied.discount || 0).toLocaleString('vi-VN')}đ</span>
+                    <span>Giảm giá{order.couponApplied?.code ? ` (${order.couponApplied.code})` : ''}:</span>
+                    <span>-{(order.couponApplied?.discount || order.discount || 0).toLocaleString('vi-VN')}đ</span>
                   </div>
                 )}
                 <div className="flex justify-between font-medium text-base">

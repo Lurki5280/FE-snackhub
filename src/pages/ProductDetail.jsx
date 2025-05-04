@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getSnackById } from "../api/snacks";
 import { getSnackReviews, createReview, updateReview, deleteReview } from "../api/reviews";
+import { addToFavorites, removeFromFavorites, checkIsFavorite } from "../api/favorites";
 import { axiosInstance } from "../config/axiosConfig";
 import { toast } from "react-toastify";
-import { FaMinus, FaPlus, FaStar, FaEdit, FaTrash, FaTag, FaGift, FaTruck } from "react-icons/fa";
+import { FaMinus, FaPlus, FaStar, FaEdit, FaTrash, FaTag, FaGift, FaTruck, FaHeart } from "react-icons/fa";
 import Spinner from "../components/Spinner";
 
 function ProductDetail() {
@@ -23,6 +24,8 @@ function ProductDetail() {
   const [currentUserId, setCurrentUserId] = useState(null);
   const [submittingReview, setSubmittingReview] = useState(false);
   const [userHasReviewed, setUserHasReviewed] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -38,6 +41,28 @@ function ProductDetail() {
       }
     }
   }, []);
+
+  // Check if product is in favorites
+  useEffect(() => {
+    const checkFavoriteStatus = async () => {
+      if (!currentUserId) {
+        // Nếu không có người dùng đăng nhập, không cần kiểm tra
+        setIsFavorite(false);
+        return;
+      }
+      
+      try {
+        // Sử dụng try/catch để xử lý mọi lỗi có thể xảy ra
+        const isFav = await checkIsFavorite(id);
+        setIsFavorite(!!isFav); // Chuyển đổi về boolean chắc chắn
+      } catch (error) {
+        console.error("Error checking favorite status:", error);
+        setIsFavorite(false); // Nếu có lỗi, đặt giá trị về false
+      }
+    };
+    
+    checkFavoriteStatus();
+  }, [id, currentUserId]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,6 +133,45 @@ function ProductDetail() {
       }
     } finally {
       setAddingToCart(false);
+    }
+  };
+
+  const handleToggleFavorite = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      toast.error("Vui lòng đăng nhập để thêm vào yêu thích");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      setFavoriteLoading(true);
+      if (isFavorite) {
+        await removeFromFavorites(id);
+        toast.success("Đã xóa khỏi danh sách yêu thích");
+      } else {
+        await addToFavorites(id);
+        toast.success("Đã thêm vào danh sách yêu thích");
+      }
+      setIsFavorite(!isFavorite);
+    } catch (error) {
+      console.error("Failed to update favorites:", error);
+      // Hiển thị thông báo lỗi chi tiết hơn
+      let errorMessage = "Không thể cập nhật danh sách yêu thích";
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        errorMessage = "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại";
+        navigate("/login");
+      } else if (!navigator.onLine) {
+        errorMessage = "Không có kết nối internet. Vui lòng kiểm tra lại mạng của bạn";
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setFavoriteLoading(false);
     }
   };
 
@@ -340,13 +404,26 @@ function ProductDetail() {
             </span>
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            disabled={addingToCart || snack.stock === 0}
-            className="bg-[#ff784e] text-white px-6 py-3 rounded-xl hover:bg-[#cc603e] transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {snack.stock === 0 ? "Hết hàng" : "Thêm vào giỏ"}
-          </button>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={handleAddToCart}
+              disabled={addingToCart || snack.stock === 0}
+              className="bg-[#ff784e] text-white px-6 py-3 rounded-xl hover:bg-[#cc603e] transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex-grow"
+            >
+              {snack.stock === 0 ? "Hết hàng" : "Thêm vào giỏ"}
+            </button>
+            
+            <button
+              onClick={handleToggleFavorite}
+              disabled={favoriteLoading}
+              className={`flex items-center justify-center rounded-xl px-4 py-3 border transition duration-200 
+                ${isFavorite 
+                  ? 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100' 
+                  : 'bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100'}`}
+            >
+              <FaHeart className={`text-lg ${isFavorite ? 'text-red-500' : 'text-gray-400'}`} />
+            </button>
+          </div>
         </div>
       </div>
 

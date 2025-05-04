@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { axiosInstance } from '../config/axiosConfig';
 import { toast } from 'react-toastify';
-import { FaMapMarkerAlt, FaCreditCard, FaMoneyBill, FaTruck, FaTimes } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaCreditCard, FaMoneyBill, FaTruck, FaTimes, FaCheck } from 'react-icons/fa';
+import { BiCoin } from 'react-icons/bi';
 import { hcmcDistricts } from '../utils/hcmcData';
+import { fetchCart as fetchCartAction } from '../store/reducers/cartReducer';
 
 
 const Order = () => {
   const navigate = useNavigate();
-  const { token } = useSelector((state) => state.auth);
+  const { token, user } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(false);
   const [cart, setCart] = useState(null);
   const [addresses, setAddresses] = useState([]);
@@ -31,6 +33,8 @@ const Order = () => {
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [cartItems, setCartItems] = useState([]);
+  const [useSnackPoints, setUseSnackPoints] = useState(false);
+  const [canUseSnackPoints, setCanUseSnackPoints] = useState(false);
 
   const fetchCart = async () => {
     try {
@@ -51,6 +55,9 @@ const Order = () => {
       const defaultAddress = response.data.find(addr => addr.isDefault);
       if (defaultAddress) {
         setSelectedAddress(defaultAddress);
+        if (cart && cart.totalPrice > 0) {
+          fetchShippingFeeForAddress(defaultAddress);
+        }
       }
     } catch (error) {
       console.error('Error fetching addresses:', error);
@@ -96,7 +103,7 @@ const Order = () => {
         setSelectedDistrict('');
         setAvailableWards([]);
         await fetchAddresses();
-        setSelectedAddress(response.data);
+        selectAddress(response.data);
       }
     } catch (error) {
       console.error('Error saving address:', error);
@@ -122,11 +129,53 @@ const Order = () => {
     }
   };
 
+  // Chọn địa chỉ và tính phí ship ngay lập tức
+  const selectAddress = (address) => {
+    setSelectedAddress(address);
+    // Gọi fetchShippingFee ngay lập tức thay vì chỉ dựa vào useEffect
+    fetchShippingFeeForAddress(address);
+  };
+
+  const fetchShippingFeeForAddress = async (address) => {
+    if (!address) return;
+    try {
+      setLoading(true); // Thêm loading state để người dùng biết đang tính toán
+      console.log(`Calculating shipping fee for ward: ${address.ward}`);  // Debug log
+      
+      // Tính tổng giá trị đơn hàng
+      const subtotal = cart.totalPriceAfterDiscount || cart.totalPrice;
+      
+      // Gửi cả thông tin phường và tổng giá trị đơn hàng
+      const response = await axiosInstance.get(`/api/shipping/fee?ward=${address.ward}&totalAmount=${subtotal}`);
+      
+      if (response.data.success) {
+        console.log(`Shipping fee result: ${response.data.fee}`);  // Debug log
+        setShippingFee(response.data.fee);
+        
+        // Hiển thị thông báo miễn phí ship nếu đơn hàng trên 200k
+        if (subtotal >= 200000 && response.data.fee === 0) {
+          toast.info("Đơn hàng trên 200.000đ được miễn phí vận chuyển!");
+        }
+      } else {
+        console.error('Error fetching shipping fee:', response.data.message);
+        setShippingFee(30000); // Default fee if error
+      }
+    } catch (error) {
+      console.error('Error fetching shipping fee:', error);
+      setShippingFee(30000); // Default fee if error
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch shipping fee from backend
   const fetchShippingFee = async () => {
     if (!selectedAddress) return;
     try {
-      const response = await axiosInstance.get(`/api/shipping/fee?ward=${selectedAddress.ward}`);
+      // Tính tổng giá trị đơn hàng
+      const subtotal = cart.totalPriceAfterDiscount || cart.totalPrice;
+      
+      const response = await axiosInstance.get(`/api/shipping/fee?ward=${selectedAddress.ward}&totalAmount=${subtotal}`);
       if (response.data.success) {
         setShippingFee(response.data.fee);
       } else {
@@ -141,8 +190,10 @@ const Order = () => {
 
   // Update shipping fee when selectedAddress changes
   useEffect(() => {
-    fetchShippingFee();
-  }, [selectedAddress]);
+    if (selectedAddress && cart) {
+      fetchShippingFee();
+    }
+  }, [selectedAddress, cart]);
 
   // Calculate total amount including shipping fee
   const calculateTotalAmount = () => {
@@ -151,6 +202,15 @@ const Order = () => {
     return subtotal + shippingFee;
   };
 
+  // Check if user has enough SnackPoints
+  useEffect(() => {
+    if (user && user.snackPoints && calculateTotalAmount() > 0) {
+      setCanUseSnackPoints(user.snackPoints >= calculateTotalAmount());
+    } else {
+      setCanUseSnackPoints(false);
+    }
+  }, [user, calculateTotalAmount]);
+
   const handlePlaceOrder = async () => {
     try {
       setLoading(true);
@@ -158,7 +218,8 @@ const Order = () => {
         addressId: selectedAddress._id,
         paymentMethod,
         note: note,
-        sendEmail: true
+        sendEmail: true,
+        useSnackPoints: useSnackPoints
       });
 
       // Clear cart after successful order
@@ -177,7 +238,13 @@ const Order = () => {
             totalPrice: cart.totalPrice,
             shippingFee,
             discount: cart.discount || 0,
-            totalAmount: calculateTotalAmount()
+            totalAmount: calculateTotalAmount(),
+            couponApplied: appliedCoupon ? {
+              code: appliedCoupon.code,
+              discount: cart.discount || 0
+            } : null,
+            paymentMethod: useSnackPoints ? 'SnackPoints' : paymentMethod,
+            snackPointsUsed: useSnackPoints ? calculateTotalAmount() : 0
           },
           shippingAddress: selectedAddress
         } 
@@ -195,7 +262,7 @@ const Order = () => {
   const handleApplyCoupon = async () => {
     try {
       setLoading(true);
-      const response = await axiosInstance.post('/api/coupons/apply', { code: couponCode });
+      const response = await axiosInstance.post('/api/carts/apply-coupon', { couponCode });
       toast.success('Mã giảm giá đã được áp dụng');
       setCouponCode('');
       setAppliedCoupon(response.data);
@@ -211,7 +278,7 @@ const Order = () => {
   const handleRemoveCoupon = async () => {
     try {
       setLoading(true);
-      await axiosInstance.post('/api/coupons/remove');
+      await axiosInstance.post('/api/carts/remove-coupon');
       toast.success('Mã giảm giá đã được xóa');
       setCouponCode('');
       setAppliedCoupon(null);
@@ -223,6 +290,13 @@ const Order = () => {
       setLoading(false);
     }
   };
+
+  // Cập nhật phí ship khi giá trị đơn hàng thay đổi (VD: sau khi áp dụng mã giảm giá)
+  useEffect(() => {
+    if (cart && selectedAddress && (cart.totalPrice > 0)) {
+      fetchShippingFee();
+    }
+  }, [cart?.totalPrice, cart?.totalPriceAfterDiscount]);
 
   useEffect(() => {
     if (!token) {
@@ -292,14 +366,14 @@ const Order = () => {
                           ? 'border-[#ff784e] bg-orange-50'
                           : 'hover:border-gray-400'
                       }`}
-                      onClick={() => setSelectedAddress(address)}
+                      onClick={() => selectAddress(address)}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-start flex-1">
                           <input
                             type="radio"
                             checked={selectedAddress?._id === address._id}
-                            onChange={() => setSelectedAddress(address)}
+                            onChange={() => selectAddress(address)}
                             className="mt-1 text-[#ff784e] focus:ring-[#ff784e]"
                           />
                           <div className="ml-3">
@@ -316,17 +390,7 @@ const Order = () => {
                             )}
                           </div>
                         </div>
-                        {!address.isDefault && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSetDefaultAddress(address._id);
-                            }}
-                            className="text-sm text-[#ff784e] hover:text-[#cc603e]"
-                          >
-                            Đặt làm mặc định
-                          </button>
-                        )}
+                        
                       </div>
                     </div>
                   ))}
@@ -476,17 +540,23 @@ const Order = () => {
               <div className="space-y-4">
                 <div
                   className={`border rounded-lg p-4 cursor-pointer ${
-                    paymentMethod === 'COD'
+                    paymentMethod === 'COD' && !useSnackPoints
                       ? 'border-[#ff784e] bg-orange-50'
                       : 'hover:border-gray-400'
                   }`}
-                  onClick={() => setPaymentMethod('COD')}
+                  onClick={() => {
+                    setPaymentMethod('COD');
+                    setUseSnackPoints(false);
+                  }}
                 >
                   <div className="flex items-center">
                     <input
                       type="radio"
-                      checked={paymentMethod === 'COD'}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      checked={paymentMethod === 'COD' && !useSnackPoints}
+                      onChange={() => {
+                        setPaymentMethod('COD');
+                        setUseSnackPoints(false);
+                      }}
                       className="text-[#ff784e] focus:ring-[#ff784e]"
                     />
                     <div className="ml-3 flex items-center">
@@ -495,6 +565,58 @@ const Order = () => {
                     </div>
                   </div>
                 </div>
+                
+                {user && user.snackPoints !== undefined && (
+                  <div
+                    className={`border rounded-lg p-4 cursor-pointer ${
+                      useSnackPoints
+                        ? 'border-[#ff784e] bg-orange-50'
+                        : canUseSnackPoints 
+                          ? 'hover:border-gray-400' 
+                          : 'opacity-60 cursor-not-allowed'
+                    }`}
+                    onClick={() => {
+                      if (canUseSnackPoints) {
+                        setUseSnackPoints(true);
+                        setPaymentMethod('SnackPoints');
+                      } else if (user.snackPoints > 0) {
+                        toast.error(`Không đủ SnackPoints! Bạn cần thêm ${calculateTotalAmount() - user.snackPoints} SnackPoints.`);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <input
+                          type="radio"
+                          checked={useSnackPoints}
+                          onChange={() => {
+                            if (canUseSnackPoints) {
+                              setUseSnackPoints(true);
+                              setPaymentMethod('SnackPoints');
+                            }
+                          }}
+                          disabled={!canUseSnackPoints}
+                          className="text-[#ff784e] focus:ring-[#ff784e]"
+                        />
+                        <div className="ml-3 flex items-center">
+                          <BiCoin className="text-yellow-500 mr-2" size={20} />
+                          <span>Thanh toán bằng SnackPoints</span>
+                        </div>
+                      </div>
+                      <div className="text-sm">
+                        <span className={canUseSnackPoints ? "text-green-600" : "text-red-600"}>
+                          {user.snackPoints?.toLocaleString('vi-VN')} / {calculateTotalAmount().toLocaleString('vi-VN')}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {!canUseSnackPoints && user.snackPoints > 0 && (
+                      <div className="mt-2 text-sm text-red-600 pl-7">
+                        Không đủ SnackPoints! Còn thiếu {(calculateTotalAmount() - user.snackPoints).toLocaleString('vi-VN')} SnackPoints.
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -579,7 +701,17 @@ const Order = () => {
                   )}
                   <div className="flex justify-between mb-2">
                     <span>Phí vận chuyển:</span>
-                    <span>{shippingFee.toLocaleString('vi-VN')}đ</span>
+                    {loading ? (
+                      <span>Đang tính phí...</span>
+                    ) : (
+                      <span>
+                        {shippingFee === 0 ? (
+                          <span className="text-green-600 font-medium">Miễn phí</span>
+                        ) : (
+                          `${shippingFee.toLocaleString('vi-VN')}đ`
+                        )}
+                      </span>
+                    )}
                   </div>
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Tổng cộng:</span>
@@ -588,6 +720,14 @@ const Order = () => {
                     </span>
                   </div>
                 </div>
+                {useSnackPoints && (
+                  <div className="flex justify-between mt-2 text-sm text-green-600">
+                    <span>Thanh toán bằng:</span>
+                    <span className="font-medium">
+                      {calculateTotalAmount().toLocaleString('vi-VN')} SnackPoints
+                    </span>
+                  </div>
+                )}
                 <button
                   onClick={handlePlaceOrder}
                   disabled={loading || !selectedAddress}

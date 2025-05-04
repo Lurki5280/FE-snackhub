@@ -193,21 +193,6 @@ const CartPage = () => {
               </div>
 
               <div className="mt-8 space-y-4">
-                <div className="flex items-center space-x-4">
-                  <input
-                    type="text"
-                    placeholder="Nhập mã giảm giá"
-                    className="border rounded px-4 py-2 flex-1"
-                  />
-                  <button
-                    onClick={() => applyCoupon(document.querySelector('input').value)}
-                    disabled={loading}
-                    className="bg-[#ff784e] text-white px-6 py-2 rounded hover:bg-[#cc603e] disabled:opacity-50"
-                  >
-                    Áp dụng
-                  </button>
-                </div>
-
                 {/* Summary section */}
                 <div className="border-t pt-4">
                   <div className="flex justify-between mb-2">
