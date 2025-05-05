@@ -101,7 +101,7 @@ function Header() {
 
           <div className="hidden lg:flex lg:flex-1 lg:justify-end items-center gap-8"></div>
           <Link to="/" className="absolute left-1/2 transform -translate-x-1/2 text-3xl font-bold text-blue-600">
-            <img src="../assets/logo.png" alt="SnackHub Logo" className="h-20 object-contain" />
+            <img src="../assets/Logo.png" alt="SnackHub Logo" className="h-20 object-contain" />
           </Link>
 
           <div className="flex items-center gap-3">
