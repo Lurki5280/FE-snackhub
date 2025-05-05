@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getSnackByCategoryId } from "../api/categories";
 import { Link } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation,Pagination} from "swiper/modules";
+import { Autoplay, Navigation,Pagination} from "swiper/modules";
 import Spinner from "../components/Spinner";
 
 const SnackList = ({ categoryId }) => {
@@ -22,16 +22,23 @@ const SnackList = ({ categoryId }) => {
         <Swiper
           ref={sliderRef}
           spaceBetween={20}
-          navigation={true}
           loop={true}
-          modules={[Navigation]}
+          pagination={{
+            clickable: true,
+            dynamicBullets: true,
+          }}
+          autoplay={{
+            delay: 5000,
+            disableOnInteraction: false,
+          }}
+          modules={[Pagination,Autoplay]}
           breakpoints={{
             320: { slidesPerView: 1 },
             640: { slidesPerView: 2 },
             768: { slidesPerView: 3 },
             1024: { slidesPerView: 4 },
           }}
-          className="arr-custom"
+          className="custom-swiper"
         >
           {products.map((product) => (
             <SwiperSlide

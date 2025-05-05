@@ -18,12 +18,14 @@ import FAQs from './pages/FAQs';
 import Contact from './pages/Contact';
 import Shipping from './pages/Shipping';
 import About from './pages/About';
+import AdPoster from "./components/AdPoster";
 import "swiper/css/navigation";
 import "swiper/css";
 import "swiper/css/pagination";
 const queryClient = new QueryClient();
 const router = createBrowserRouter([
   {
+  
     path: "/",
     element: <Layout />,
     children: [
@@ -90,6 +92,7 @@ function App() {
     <>
       <QueryClientProvider client={queryClient}>
       <ToastContainer position="top-right" autoClose={3000} />
+        <AdPoster/>
         <RouterProvider router={router} />
       </QueryClientProvider>
     </>

@@ -6,6 +6,7 @@ import PromoTicker from "../components/Banner"
 import { getAllCategories } from "../api/categories"
 import Spinner from "../components/Spinner"
 import SnackList from "./SnackList"
+import BannerSlider from "../components/AdBanner"
 function Home() {
   const [snacks, setSnacks] = useState([])
   const [loading, setLoading] = useState(true)
@@ -37,7 +38,7 @@ function Home() {
     <section>
     <div
   className="relative w-full bg-cover bg-center text-white py-24 px-6 md:px-12 rounded-xl shadow-lg"
-  style={{ backgroundImage: "url('/assets/banner.jpg')" }}
+  style={{ backgroundImage: "url('/assets/ads/banner1.jpg')" }}
 >
         <div className="bg-black bg-opacity-50 p-6 rounded-xl max-w-2xl mx-auto text-center">
           <h1 className="text-3xl md:text-4xl font-punch text-orange-300 leading-tight">

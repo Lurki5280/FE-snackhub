@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getSnackById } from "../api/snacks";
+import { getSnackById,getSnackByCategoryId } from "../api/snacks";
 import { getSnackReviews, createReview, updateReview, deleteReview } from "../api/reviews";
 import { addToFavorites, removeFromFavorites, checkIsFavorite } from "../api/favorites";
 import { axiosInstance } from "../config/axiosConfig";
 import { toast } from "react-toastify";
 import { FaMinus, FaPlus, FaStar, FaEdit, FaTrash, FaTag, FaGift, FaTruck, FaHeart } from "react-icons/fa";
 import Spinner from "../components/Spinner";
-
+import SnackList from "./SnackList";
 function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -426,7 +426,6 @@ function ProductDetail() {
           </div>
         </div>
       </div>
-
       <div className="mt-16">
         <h2 className="text-2xl font-bold mb-4 text-gray-800">Mô tả sản phẩm</h2>
         <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -562,6 +561,10 @@ function ProductDetail() {
           )}
         </div>
       </div>
+        <h3 className="text-3xl mt-10 mb-10">Có thể bạn sẽ thích</h3>
+      {snack?.categoryId && (
+          <SnackList categoryId={snack.categoryId} />
+        )}
     </div>
   );
 }

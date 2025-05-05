@@ -9,3 +9,7 @@ export const getSnackById = async (SnackId) => {
     const res = await axiosInstance.get(`api/snacks/${SnackId}`);
     return res.data;
 };
+export const getSnackByCategoryId = async(CategoryId) => {
+    const res = await axiosInstance.get(`api/snacks/category/${CategoryId}`)
+    return res.data;
+}
