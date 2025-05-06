@@ -60,6 +60,7 @@ const Profile = () => {
   const [showRemoveFavoriteModal, setShowRemoveFavoriteModal] = useState(false);
   const [snackPointsAmount, setSnackPointsAmount] = useState('');
   const [loadingPoints, setLoadingPoints] = useState(false);
+  const [statusFilter, setStatusFilter] = useState('all');
 
   // Get tab from URL query parameter
   useEffect(() => {
@@ -439,6 +440,14 @@ const Profile = () => {
     } finally {
       setLoadingPoints(false);
     }
+  };
+
+  // Thêm hàm lọc đơn hàng theo trạng thái
+  const getFilteredOrders = () => {
+    if (statusFilter === 'all') {
+      return orders;
+    }
+    return orders.filter(order => order.orderStatus === statusFilter);
   };
 
   useEffect(() => {
@@ -888,17 +897,45 @@ const Profile = () => {
 
             {activeTab === 'orders' && (
               <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <FaClipboardList className="text-[#ff784e]" />
-                  <span className="font-medium">Đơn hàng của tôi</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <FaClipboardList className="text-[#ff784e]" />
+                    <span className="font-medium">Đơn hàng của tôi</span>
+                  </div>
+                  
+                  {/* Thêm thanh lọc đơn hàng */}
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm">Lọc theo:</span>
+                    <select 
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="border rounded-md p-1 text-sm focus:border-[#ff784e] focus:ring-[#ff784e]"
+                    >
+                      <option value="all">Tất cả</option>
+                      <option value="pending">Chờ xử lý</option>
+                      <option value="processing">Đang xử lý</option>
+                      <option value="shipping">Đang giao hàng</option>
+                      <option value="delivered">Đã hoàn thành</option>
+                      <option value="cancelled">Đã hủy</option>
+                    </select>
+                  </div>
                 </div>
+                
                 {loading ? (
                   <div className="text-center py-4">Đang tải...</div>
                 ) : orders.length === 0 ? (
                   <div className="text-center py-4">Bạn chưa có đơn hàng nào</div>
+                ) : getFilteredOrders().length === 0 ? (
+                  <div className="text-center py-4">Không có đơn hàng {
+                    statusFilter === 'pending' ? 'chờ xử lý' :
+                    statusFilter === 'processing' ? 'đang xử lý' :
+                    statusFilter === 'shipping' ? 'đang giao hàng' :
+                    statusFilter === 'delivered' ? 'đã hoàn thành' :
+                    statusFilter === 'cancelled' ? 'đã hủy' : ''
+                  }</div>
                 ) : (
                   <div className="space-y-4">
-                    {orders.map((order) => (
+                    {getFilteredOrders().map((order) => (
                       <div key={order._id} className="border rounded-lg p-4">
                         <div className="flex justify-between items-center mb-4">
                           <div>
