@@ -65,14 +65,14 @@ const SnackList = ({ categoryId }) => {
                   {product.snackName}
                 </h3>
 
-                <div className="flex flex-col items-center mt-2">
+                <div className="flex gap-2 items-center justify-center mt-2">
                 <p className="text-red-500 text-sm font-bold">
                     {(
                     product.price * (1 - product.discount / 100)
                     ).toLocaleString('vi-VN')}đ
                 </p>
                     {product.discount > 0 && (
-                        <p className="text-gray-400 text-xs line-through">
+                        <p className="text-gray-400 text-sm line-through">
                         {product.price.toLocaleString('vi-VN')}đ
                         </p>)}
                 </div>
