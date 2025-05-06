@@ -104,15 +104,12 @@ const Login = () => {
                 />
               </svg>
             </div>
-            <h1 className="px-4 py-3 w-5/6 text-center text-gray-600 font-bold">
-              Đăng nhập bằng Google
-            </h1>
           </a>
 
           <div className="mt-4 flex items-center justify-between">
             <span className="border-b w-1/5 lg:w-1/4"></span>
             <a href="#" className="text-xs text-center text-gray-500 uppercase">
-              Hoặc đăng nhập bằng email
+              Đăng nhập bằng email
             </a>
             <span className="border-b w-1/5 lg:w-1/4"></span>
           </div>
