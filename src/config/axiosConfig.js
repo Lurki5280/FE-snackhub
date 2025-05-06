@@ -2,7 +2,7 @@ import axios from "axios";
 import { WHITE_LIST_ROUTES } from "../utils/appConstant";
 
 export const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5000',
+  baseURL: 'https://backend-snack-shop.onrender.com',
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
