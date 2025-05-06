@@ -52,6 +52,13 @@ function Header() {
     navigate('/login');
   };
   useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [isOpen]);
+  useEffect(() => {
     if (user && token) {
       dispatch(fetchCart({ token }));
       dispatch(getSnackPoints());
@@ -67,11 +74,11 @@ function Header() {
         />
       )}
 
-      <div
-        className={`fixed top-0 left-0 h-full w-64 bg-white z-50 shadow-md transform transition-transform duration-300 ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
+        <div
+          className={`fixed top-0 left-0 h-full w-64 bg-white z-50 shadow-md transform transition-transform duration-300 ${
+            isOpen ? "translate-x-0" : "-translate-x-full"
+          } overflow-y-auto`}
+        >
         <div className="flex justify-between items-center p-4 border-b">
           <button onClick={() => navigate('/profile')}><h2 className="flex text-sm gap-2 font-bold text-[#ff784e] "><FaUserCircle size={20}/>Tài khoản</h2></button>
           <button onClick={() => setIsOpen(false)}>
