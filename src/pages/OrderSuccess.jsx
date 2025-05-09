@@ -124,6 +124,13 @@ function OrderSuccess() {
                   </div>
                 )}
                 
+                {orderDetails.paymentMethod === 'SnackPoints' && (
+                  <div className="flex justify-between text-green-600">
+                    <span>Giảm thêm (5%):</span>
+                    <span>-{Math.round(orderDetails.totalAmount * 0.05).toLocaleString('vi-VN')}đ</span>
+                  </div>
+                )}
+                
                 <div className="flex justify-between">
                   <span>Phí vận chuyển:</span>
                   <span>

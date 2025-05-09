@@ -177,10 +177,22 @@ function OrderDetail() {
                     <span>-{(order.couponApplied?.discount || order.discount || 0).toLocaleString('vi-VN')}đ</span>
                   </div>
                 )}
+                {order.paymentMethod === 'SnackPoints' && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Giảm thêm (5%):</span>
+                    <span>-{Math.round(order.totalAmount * 0.05).toLocaleString('vi-VN')}đ</span>
+                  </div>
+                )}
                 <div className="flex justify-between font-medium text-base">
                   <span>Tổng cộng:</span>
                   <span className="text-[#ff784e]">{(order.totalAmount || 0).toLocaleString('vi-VN')}đ</span>
                 </div>
+                {order.paymentMethod === 'SnackPoints' && (
+                  <div className="flex justify-between text-sm text-green-600 mt-2">
+                    <span>Thanh toán bằng:</span>
+                    <span>{order.snackPointsUsed?.toLocaleString('vi-VN')} SnackPoints</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
