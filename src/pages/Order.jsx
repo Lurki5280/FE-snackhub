@@ -202,10 +202,19 @@ const Order = () => {
     return subtotal + shippingFee;
   };
 
+  const calculateFinalAmount = () => {
+    const total = calculateTotalAmount();
+    return useSnackPoints ? Math.round(total * 0.95) : total;
+  };
+
+  const calculateSnackPointsNeeded = () => {
+    return Math.round(calculateTotalAmount() * 0.95);
+  };
+
   // Check if user has enough SnackPoints
   useEffect(() => {
     if (user && user.snackPoints && calculateTotalAmount() > 0) {
-      setCanUseSnackPoints(user.snackPoints >= calculateTotalAmount());
+      setCanUseSnackPoints(user.snackPoints >= calculateSnackPointsNeeded());
     } else {
       setCanUseSnackPoints(false);
     }
@@ -238,13 +247,13 @@ const Order = () => {
             totalPrice: cart.totalPrice,
             shippingFee,
             discount: cart.discount || 0,
-            totalAmount: calculateTotalAmount(),
+            totalAmount: calculateFinalAmount(),
             couponApplied: appliedCoupon ? {
               code: appliedCoupon.code,
               discount: cart.discount || 0
             } : null,
             paymentMethod: useSnackPoints ? 'SnackPoints' : paymentMethod,
-            snackPointsUsed: useSnackPoints ? calculateTotalAmount() : 0
+            snackPointsUsed: useSnackPoints ? calculateSnackPointsNeeded() : 0
           },
           shippingAddress: selectedAddress
         } 
@@ -783,10 +792,7 @@ const Order = () => {
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Tổng cộng:</span>
                     <span className="text-[#ff784e]">
-                      {(useSnackPoints 
-                        ? Math.round(calculateTotalAmount() * 0.95)
-                        : calculateTotalAmount()
-                      ).toLocaleString('vi-VN')}đ
+                      {calculateFinalAmount().toLocaleString('vi-VN')}đ
                     </span>
                   </div>
                 </div>
@@ -794,7 +800,7 @@ const Order = () => {
                   <div className="flex justify-between mt-2 text-sm text-green-600">
                     <span>Thanh toán bằng:</span>
                     <span className="font-medium">
-                      {calculateTotalAmount().toLocaleString('vi-VN')} SnackPoints
+                      {calculateSnackPointsNeeded().toLocaleString('vi-VN')} SnackPoints
                     </span>
                   </div>
                 )}
