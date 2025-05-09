@@ -92,6 +92,25 @@ const authSlice = createSlice({
     resetAuthState: (state) => {
       return initialState;
     },
+    loadSnackPointsSuccess: (state, action) => {
+      if (state.user) {
+        state.user.snackPoints = action.payload.currentPoints ||
+          (state.user.snackPoints || 0) + (action.payload.amount || 0);
+        
+        // Thêm vào lịch sử giao dịch nếu có
+        if (action.payload.amount > 0) {
+          const newHistory = {
+            date: new Date(),
+            description: `Nạp SnackPoints qua ${action.payload.method || 'thanh toán online'}`,
+            amount: action.payload.amount
+          };
+          
+          state.user.pointsHistory = state.user.pointsHistory 
+            ? [newHistory, ...state.user.pointsHistory] 
+            : [newHistory];
+        }
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -153,7 +172,8 @@ const authSlice = createSlice({
       .addCase(loadSnackPoints.fulfilled, (state, action) => {
         state.loading = "idle";
         if (state.user) {
-          state.user.snackPoints = action.payload.currentPoints;
+          state.user.snackPoints = action.payload.currentPoints || 
+            (state.user.snackPoints || 0) + (action.payload.amount || 0);
         }
       })
       .addCase(loadSnackPoints.rejected, (state, action) => {
@@ -163,6 +183,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, resetAuthState } = authSlice.actions;
+export const { logout, resetAuthState, loadSnackPointsSuccess } = authSlice.actions;
 
 export default authSlice.reducer;

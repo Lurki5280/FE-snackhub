@@ -14,11 +14,15 @@ import CartPage from "./pages/CartPage"
 import Order from "./pages/Order"
 import OrderDetail from "./pages/OrderDetail"
 import OrderSuccess from "./pages/OrderSuccess"
+import PaymentSuccess from "./pages/PaymentSuccess"
+import PaymentError from "./pages/PaymentError"
+import PaymentCancel from "./pages/PaymentCancel"
 import FAQs from './pages/FAQs';
 import Contact from './pages/Contact';
 import Shipping from './pages/Shipping';
 import About from './pages/About';
 import AdPoster from "./components/AdPoster";
+import ForgotPassword from "./pages/ForgotPassword";
 import "swiper/css/navigation";
 import "swiper/css";
 import "swiper/css/pagination";
@@ -39,6 +43,10 @@ const router = createBrowserRouter([
       {
         path: "/register",
         element: <Register />,
+      },
+      {
+        path: "/forgot-password",
+        element: <ForgotPassword />,
       },
       {
         path: "/product/:id",
@@ -67,6 +75,18 @@ const router = createBrowserRouter([
       {
         path: "/order-success",
         element: <OrderSuccess />,
+      },
+      {
+        path: "/payment/success",
+        element: <PaymentSuccess />,
+      },
+      {
+        path: "/payment/error",
+        element: <PaymentError />,
+      },
+      {
+        path: "/payment/cancel",
+        element: <PaymentCancel />,
       },
       {
         path: "/faqs",

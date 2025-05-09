@@ -14,14 +14,9 @@ const menuItems = [
     path: "/popular"
   },
   {
-    label: "Đặc sản",
+    label: "SnackPoint",
     icon: "/assets/gift.png",
-    path: "/gift"
-  },
-  {
-    label: "Bánh kẹo",
-    icon: "/assets/snack.png",
-    path: "/past-boxes"
+    path: "/profile?tab=snackpoints"
   },
   {
     label: "Giỏ hàng",
@@ -124,7 +119,7 @@ function Header() {
               <>
                 <div className="hidden md:flex items-center bg-yellow-100 rounded-full px-3 py-1 text-yellow-700">
                   <BiCoin className="text-yellow-500 mr-1" size={18} />
-                  <span className="font-medium">{user.snackPoints?.toLocaleString('vi-VN') || 0}</span>
+                  <span className="font-medium points-value">{user.snackPoints?.toLocaleString('vi-VN') || 0}</span>
                 </div>
                 <Link to="/cart" className="relative">
                   <ShoppingCartIcon className="h-7 w-7" />

@@ -600,7 +600,10 @@ const Order = () => {
                         />
                         <div className="ml-3 flex items-center">
                           <BiCoin className="text-yellow-500 mr-2" size={20} />
-                          <span>Thanh toán bằng SnackPoints</span>
+                          <div>
+                            <span>Thanh toán bằng SnackPoints</span>
+                            <p className="text-sm text-green-600">Giảm thêm 5% tổng đơn hàng</p>
+                          </div>
                         </div>
                       </div>
                       <div className="text-sm">
@@ -617,6 +620,64 @@ const Order = () => {
                     )}
                   </div>
                 )}
+
+                {/* MoMo Payment Method */}
+                <div
+                  className={`border rounded-lg p-4 cursor-pointer ${
+                    paymentMethod === 'MoMo' && !useSnackPoints
+                      ? 'border-[#ff784e] bg-orange-50'
+                      : 'hover:border-gray-400'
+                  }`}
+                  onClick={() => {
+                    setPaymentMethod('MoMo');
+                    setUseSnackPoints(false);
+                  }}
+                >
+                  <div className="flex items-center">
+                    <input
+                      type="radio"
+                      checked={paymentMethod === 'MoMo' && !useSnackPoints}
+                      onChange={() => {
+                        setPaymentMethod('MoMo');
+                        setUseSnackPoints(false);
+                      }}
+                      className="text-[#ff784e] focus:ring-[#ff784e]"
+                    />
+                    <div className="ml-3 flex items-center">
+                      <div className="w-8 h-8 bg-[#ae2070] rounded-md flex items-center justify-center mr-2">
+                        <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="MoMo" className="w-6 h-6 object-contain" />
+                      </div>
+                      <span>Thanh toán qua ví MoMo</span>
+                    </div>
+                  </div>
+                  
+                  {paymentMethod === 'MoMo' && !useSnackPoints && (
+                    <div className="ml-7 mt-3">
+                      <div className="flex bg-gray-50 p-3 rounded-md">
+                        <div className="mr-4 bg-white p-2 rounded-md">
+                          <div className="w-32 h-32 border border-gray-200 rounded-md overflow-hidden">
+                            <img
+                              src="/assets/momo-qr.jpg"
+                              alt="MoMo QR"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <p className="text-xs text-center mt-2 text-gray-500">Quét mã QR để thanh toán</p>
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-medium mb-2">Hướng dẫn thanh toán</h4>
+                          <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                            <li>Mở ứng dụng MoMo trên điện thoại</li>
+                            <li>Chọn "Quét mã QR"</li>
+                            <li>Quét mã QR bên trái</li>
+                            <li>Xác nhận thanh toán {calculateTotalAmount().toLocaleString('vi-VN')}đ</li>
+                            <li>Nhấn "Đặt hàng" bên dưới</li>
+                          </ol>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -699,6 +760,12 @@ const Order = () => {
                       <span>-{cart.discount.toLocaleString('vi-VN')}đ</span>
                     </div>
                   )}
+                  {useSnackPoints && (
+                    <div className="flex justify-between mb-2 text-green-600">
+                      <span>Giảm thêm (5%):</span>
+                      <span>-{Math.round(calculateTotalAmount() * 0.05).toLocaleString('vi-VN')}đ</span>
+                    </div>
+                  )}
                   <div className="flex justify-between mb-2">
                     <span>Phí vận chuyển:</span>
                     {loading ? (
@@ -716,7 +783,10 @@ const Order = () => {
                   <div className="flex justify-between font-semibold text-lg">
                     <span>Tổng cộng:</span>
                     <span className="text-[#ff784e]">
-                      {calculateTotalAmount().toLocaleString('vi-VN')}đ
+                      {(useSnackPoints 
+                        ? Math.round(calculateTotalAmount() * 0.95)
+                        : calculateTotalAmount()
+                      ).toLocaleString('vi-VN')}đ
                     </span>
                   </div>
                 </div>

@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { FaUser, FaShoppingCart, FaHistory, FaHeart, FaMapMarkerAlt, FaPlus, FaEdit, FaTrash, FaStar, FaClipboardList, FaComment, FaLock, FaExclamationTriangle, FaTimes, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaUser, FaShoppingCart, FaHistory, FaHeart, FaMapMarkerAlt, FaPlus, FaEdit, FaTrash, FaStar, FaClipboardList, FaComment, FaLock, FaExclamationTriangle, FaTimes, FaEye, FaEyeSlash, FaPaypal } from 'react-icons/fa';
 import { BiCoin } from 'react-icons/bi';
-import { getCurrentUser, loadSnackPoints } from '../store/reducers/authReducer';
+import { getCurrentUser, loadSnackPoints, loadSnackPointsSuccess } from '../store/reducers/authReducer';
 import { axiosInstance } from '../config/axiosConfig';
 import { toast } from 'react-toastify';
 import { hcmcDistricts } from '../utils/hcmcData';
 import { getUserReviews, updateReview, deleteReview } from '../api/reviews';
 import { changePassword } from '../api/auth';
 import { getUserFavorites, removeFromFavorites } from '../api/favorites';
+import { createPayPalPayment, loadSnackPointsViaOther } from '../api/auth';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -61,6 +62,31 @@ const Profile = () => {
   const [snackPointsAmount, setSnackPointsAmount] = useState('');
   const [loadingPoints, setLoadingPoints] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('momo');
+
+  // Giả lập API request để cập nhật SnackPoints
+  const mockUpdateSnackPoints = async (amount, method) => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Giả lập response từ server
+        const newPoints = (user.snackPoints || 0) + amount;
+        const response = {
+          success: true,
+          currentPoints: newPoints,
+          amount: amount,
+          method: method,
+          message: `Nạp thành công ${amount.toLocaleString('vi-VN')} SnackPoints!`
+        };
+        
+        console.log('Mock API Response:', response);
+        
+        // Lưu vào localStorage để giữ giữa các lần refresh
+        localStorage.setItem('mockSnackPoints', newPoints.toString());
+        
+        resolve(response);
+      }, 800);
+    });
+  };
 
   // Get tab from URL query parameter
   useEffect(() => {
@@ -220,6 +246,16 @@ const Profile = () => {
   const confirmCancelOrder = async () => {
     try {
       setLoading(true);
+      
+      // Kiểm tra trạng thái đơn hàng trước khi hủy
+      const orderToCheck = orders.find(order => order._id === orderToCancel);
+      if (orderToCheck && (orderToCheck.orderStatus === 'shipping' || orderToCheck.orderStatus === 'delivered')) {
+        toast.error('Không thể hủy đơn hàng đang giao hoặc đã hoàn thành');
+        setShowCancelOrderModal(false);
+        setOrderToCancel(null);
+        return;
+      }
+      
       const response = await axiosInstance.delete(`/api/orders/${orderToCancel}`);
       // Hiển thị thông báo tùy chỉnh từ server nếu có
       if (response.data.message) {
@@ -430,7 +466,70 @@ const Profile = () => {
     
     try {
       setLoadingPoints(true);
-      await dispatch(loadSnackPoints(amount)).unwrap();
+      
+      // Xử lý thanh toán PayPal
+      if (selectedPaymentMethod === 'paypal') {
+        const paypalResponse = await createPayPalPayment(amount);
+        if (paypalResponse.success && paypalResponse.approvalUrl) {
+          window.location.href = paypalResponse.approvalUrl;
+          return;
+        } else {
+          throw new Error('Không thể kết nối với PayPal');
+        }
+      }
+      
+      // Xử lý thanh toán MoMo và VNPay qua API thực
+      if (selectedPaymentMethod === 'momo' || selectedPaymentMethod === 'vnpay') {
+        // Hiển thị thông báo đang xử lý
+        toast.info('Đang xử lý thanh toán qua ' + (selectedPaymentMethod === 'momo' ? 'MoMo' : 'VNPay'));
+        
+        try {
+          // Gọi API nạp SnackPoints
+          const response = await loadSnackPointsViaOther(amount, selectedPaymentMethod);
+          
+          // Cập nhật số điểm trong Redux store
+          dispatch({
+            type: 'auth/getUserSuccess',
+            payload: {
+              ...user,
+              snackPoints: response.currentPoints,
+              pointsHistory: [
+                {
+                  date: new Date(),
+                  description: `Nạp SnackPoints qua ${selectedPaymentMethod === 'momo' ? 'MoMo' : 'VNPay'}`,
+                  amount: amount
+                },
+                ...(user.pointsHistory || [])
+              ]
+            }
+          });
+          
+          // Hiển thị thông báo thành công
+          toast.success(`Nạp thành công ${amount.toLocaleString('vi-VN')} SnackPoints!`);
+          
+          // Làm mới form
+          setSnackPointsAmount('');
+          
+          // Tải lại trang sau 1 giây để cập nhật dữ liệu mới nhất
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } catch (error) {
+          console.error('Lỗi khi xử lý thanh toán:', error);
+          toast.error(error.message || 'Đã xảy ra lỗi khi xử lý thanh toán. Vui lòng thử lại.');
+        } finally {
+          setLoadingPoints(false);
+        }
+        
+        return;
+      }
+      
+      // Xử lý các phương thức thanh toán khác
+      await dispatch(loadSnackPoints({
+        amount,
+        paymentMethod: selectedPaymentMethod
+      })).unwrap();
+      
       toast.success(`Nạp thành công ${amount.toLocaleString('vi-VN')} SnackPoints!`);
       setSnackPointsAmount('');
       // Cập nhật thông tin người dùng
@@ -467,8 +566,11 @@ const Profile = () => {
       fetchReviews();
     } else if (activeTab === 'favorites') {
       fetchFavorites();
+    } else if (activeTab === 'snackpoints') {
+      // Tải lại thông tin người dùng mỗi khi vào tab snackpoints
+      dispatch(getCurrentUser());
     }
-  }, [activeTab]);
+  }, [activeTab, dispatch]);
 
   if (!user) {
     return (
@@ -989,7 +1091,7 @@ const Profile = () => {
                             Tổng cộng: <span className="text-[#ff784e]">{(order.totalAmount || 0).toLocaleString('vi-VN')}đ</span>
                           </div>
                           <div className="flex space-x-2">
-                            {order.orderStatus === 'pending' && (
+                            {(order.orderStatus === 'pending' || order.orderStatus === 'processing') && (
                               <button
                                 onClick={() => handleCancelOrder(order._id)}
                                 className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
@@ -1242,10 +1344,23 @@ const Profile = () => {
                 
                 <div className="flex items-center mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
                   <BiCoin className="text-4xl text-yellow-500 mr-4" />
-                  <div>
+                  <div className="flex-1">
                     <p className="text-gray-600">Số SnackPoints hiện có:</p>
-                    <p className="text-2xl font-bold text-yellow-600">{user?.snackPoints?.toLocaleString('vi-VN') || 0}</p>
+                    <p className="text-2xl font-bold text-yellow-600">
+                      {user?.snackPoints?.toLocaleString('vi-VN') || 0}
+                    </p>
                   </div>
+                  <button 
+                    onClick={() => {
+                      toast.info("Đang tải lại dữ liệu...");
+                      dispatch(getCurrentUser())
+                        .then(() => toast.success("Đã cập nhật dữ liệu mới nhất"))
+                        .catch(() => toast.error("Không thể tải dữ liệu"));
+                    }}
+                    className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                  >
+                    Làm mới
+                  </button>
                 </div>
                 
                 <div className="mb-6">
@@ -1296,14 +1411,18 @@ const Profile = () => {
                     
                     <div className="space-y-3">
                       {/* MoMo */}
-                      <div className="border rounded-lg p-3 hover:shadow-md cursor-pointer bg-white transition-all">
+                      <div 
+                        className={`border rounded-lg p-3 hover:shadow-md cursor-pointer bg-white transition-all ${selectedPaymentMethod === 'momo' ? 'border-[#ff784e]' : ''}`}
+                        onClick={() => setSelectedPaymentMethod('momo')}
+                      >
                         <div className="flex items-center">
                           <input 
                             type="radio" 
                             id="momo" 
                             name="payment" 
+                            checked={selectedPaymentMethod === 'momo'}
+                            onChange={() => setSelectedPaymentMethod('momo')}
                             className="h-4 w-4 text-[#ff784e] focus:ring-[#ff784e]"
-                            defaultChecked
                           />
                           <label htmlFor="momo" className="ml-3 flex items-center cursor-pointer">
                             <div className="w-10 h-10 bg-[#ae2070] rounded-md flex items-center justify-center mr-3">
@@ -1344,13 +1463,68 @@ const Profile = () => {
                         </div>
                       </div>
                       
+                      {/* PayPal */}
+                      <div 
+                        className={`border rounded-lg p-3 hover:shadow-md cursor-pointer bg-white transition-all ${selectedPaymentMethod === 'paypal' ? 'border-[#ff784e]' : ''}`}
+                        onClick={() => setSelectedPaymentMethod('paypal')}
+                      >
+                        <div className="flex items-center">
+                          <input 
+                            type="radio" 
+                            id="paypal" 
+                            name="payment" 
+                            checked={selectedPaymentMethod === 'paypal'}
+                            onChange={() => setSelectedPaymentMethod('paypal')}
+                            className="h-4 w-4 text-[#ff784e] focus:ring-[#ff784e]"
+                          />
+                          <label htmlFor="paypal" className="ml-3 flex items-center cursor-pointer">
+                            <div className="w-10 h-10 bg-[#0070ba] rounded-md flex items-center justify-center mr-3">
+                              <FaPaypal className="text-white text-xl" />
+                            </div>
+                            <div>
+                              <p className="font-medium">PayPal</p>
+                              <p className="text-xs text-gray-500">Thanh toán an toàn qua PayPal</p>
+                            </div>
+                          </label>
+                        </div>
+                        
+                        {selectedPaymentMethod === 'paypal' && (
+                          <div className="ml-7 mt-3">
+                            <div className="p-4 bg-blue-50 rounded-md border border-blue-100">
+                              <div className="flex items-start">
+                                <div className="flex-shrink-0 mt-0.5">
+                                  <FaPaypal className="text-[#0070ba] text-xl" />
+                                </div>
+                                <div className="ml-3">
+                                  <h4 className="text-sm font-medium text-blue-800">Thanh toán an toàn qua PayPal</h4>
+                                  <p className="mt-1 text-sm text-blue-700">
+                                    Bạn sẽ được chuyển đến trang thanh toán PayPal an toàn sau khi nhấn "Xác nhận nạp SnackPoints".
+                                    <br />
+                                    Bạn có thể thanh toán bằng tài khoản PayPal hoặc thẻ tín dụng/ghi nợ.
+                                  </p>
+                                  <div className="mt-2 flex items-center">
+                                    <img src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/PP_logo_h_100x26.png" alt="PayPal" className="h-6" />
+                                    <img src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/cc-badges-ppppcmcvdam.png" alt="Credit Card Badges" className="h-6 ml-2" />
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
                       {/* VNPay */}
-                      <div className="border rounded-lg p-3 hover:shadow-md cursor-pointer bg-white transition-all">
+                      <div 
+                        className={`border rounded-lg p-3 hover:shadow-md cursor-pointer bg-white transition-all ${selectedPaymentMethod === 'vnpay' ? 'border-[#ff784e]' : ''}`}
+                        onClick={() => setSelectedPaymentMethod('vnpay')}
+                      >
                         <div className="flex items-center">
                           <input 
                             type="radio" 
                             id="vnpay" 
                             name="payment" 
+                            checked={selectedPaymentMethod === 'vnpay'}
+                            onChange={() => setSelectedPaymentMethod('vnpay')}
                             className="h-4 w-4 text-[#ff784e] focus:ring-[#ff784e]"
                           />
                           <label htmlFor="vnpay" className="ml-3 flex items-center cursor-pointer">
@@ -1365,69 +1539,6 @@ const Profile = () => {
                         </div>
                       </div>
                       
-                      {/* Ngân hàng */}
-                      <div className="border rounded-lg p-3 hover:shadow-md cursor-pointer bg-white transition-all">
-                        <div className="flex items-center">
-                          <input 
-                            type="radio" 
-                            id="bank" 
-                            name="payment" 
-                            className="h-4 w-4 text-[#ff784e] focus:ring-[#ff784e]"
-                          />
-                          <label htmlFor="bank" className="ml-3 flex items-center cursor-pointer">
-                            <div className="w-10 h-10 bg-[#2e7d32] rounded-md flex items-center justify-center mr-3">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 6l9-4 9 4v2H3V6z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12h18v8H3v-8z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12v8M12 12v8M17 12v8" />
-                              </svg>
-                            </div>
-                            <div>
-                              <p className="font-medium">Thẻ ngân hàng</p>
-                              <p className="text-xs text-gray-500">Thanh toán bằng thẻ ATM, Visa, Mastercard</p>
-                            </div>
-                          </label>
-                        </div>
-                        
-                        <div className="ml-7 mt-3">
-                          <div className="p-3 bg-gray-50 rounded-md">
-                            <div className="mb-3">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Số thẻ</label>
-                              <input 
-                                type="text" 
-                                placeholder="1234 5678 9012 3456" 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#ff784e] focus:border-[#ff784e]"
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-3 mb-3">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Hết hạn</label>
-                                <input 
-                                  type="text" 
-                                  placeholder="MM/YY" 
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#ff784e] focus:border-[#ff784e]"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">CVV</label>
-                                <input 
-                                  type="text" 
-                                  placeholder="123" 
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#ff784e] focus:border-[#ff784e]"
-                                />
-                              </div>
-                            </div>
-                            <div className="mb-1">
-                              <label className="block text-sm font-medium text-gray-700 mb-1">Tên chủ thẻ</label>
-                              <input 
-                                type="text" 
-                                placeholder="NGUYEN VAN A" 
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-[#ff784e] focus:border-[#ff784e]"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   </div>
                   
@@ -1435,9 +1546,9 @@ const Profile = () => {
                   <button
                     onClick={handleLoadSnackPoints}
                     disabled={!snackPointsAmount || loadingPoints}
-                    className="w-full bg-[#ff784e] text-white py-3 px-4 rounded-md hover:bg-[#cc603e] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed mt-4"
+                    className="w-full py-3 bg-[#ff784e] text-white rounded-md font-semibold disabled:opacity-70 disabled:cursor-not-allowed hover:bg-[#e66b44] transition-all"
                   >
-                    {loadingPoints ? 'Đang xử lý...' : `Nạp ${Number(snackPointsAmount || 0).toLocaleString('vi-VN')} SnackPoints`}
+                    {loadingPoints ? 'Đang xử lý...' : 'Xác nhận nạp SnackPoints'}
                   </button>
                 </div>
                 
@@ -1449,26 +1560,57 @@ const Profile = () => {
                       <thead className="bg-gray-50">
                         <tr>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày</th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mô tả</th>
+                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hình thức giao dịch</th>
                           <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số SnackPoints</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">24/07/2023</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Nạp SnackPoints qua MoMo</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">+100,000</td>
-                        </tr>
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">18/07/2023</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Thanh toán đơn hàng #82741</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-red-600">-75,000</td>
-                        </tr>
-                        <tr>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10/07/2023</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Hoàn tiền từ đơn hàng #82654</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">+50,000</td>
-                        </tr>
+                        {user.pointsHistory && user.pointsHistory.length > 0 ? (
+                          user.pointsHistory.map((history, index) => (
+                            <tr key={index}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {new Date(history.date).toLocaleDateString('vi-VN')}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {(() => {
+                                  // Kiểm tra nếu description undefined hoặc null
+                                  if (!history.description) return 'Giao dịch';
+                                  
+                                  // Xác định hình thức giao dịch dựa trên mô tả
+                                  const description = history.description.toLowerCase();
+                                  
+                                  if (description.includes('momo')) return 'MoMo';
+                                  if (description.includes('paypal')) return 'PayPal';
+                                  if (description.includes('vnpay')) return 'VNPay';
+                                  if (description.includes('zalopay')) return 'ZaloPay';
+                                  
+                                  if (description.includes('nạp') || description.includes('thêm')) {
+                                    return 'Nạp SnackPoints';
+                                  }
+                                  
+                                  if (description.includes('thanh toán') || description.includes('mua')) {
+                                    return 'Thanh toán đơn hàng';
+                                  }
+                                  
+                                  if (description.includes('hoàn') || description.includes('trả')) {
+                                    return 'Hoàn tiền';
+                                  }
+                                  
+                                  return history.description;
+                                })()}
+                              </td>
+                              <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${history.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                {history.amount > 0 ? '+' : ''}{history.amount.toLocaleString('vi-VN')}
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="3" className="px-6 py-4 text-center text-sm text-gray-500">
+                              Chưa có giao dịch nào
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
@@ -1524,7 +1666,13 @@ const Profile = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
             <h3 className="text-lg font-medium mb-4">Xác nhận hủy đơn hàng</h3>
-            <p className="text-gray-600 mb-6">Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.</p>
+            <p className="text-gray-600 mb-4">Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.</p>
+            <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-md mb-6">
+              <p className="text-yellow-700 text-sm">
+                <strong>Lưu ý:</strong> Bạn chỉ có thể hủy đơn hàng ở trạng thái "Chờ xử lý" hoặc "Đang xử lý". 
+                Đơn hàng đang giao hoặc đã hoàn thành không thể hủy.
+              </p>
+            </div>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => {

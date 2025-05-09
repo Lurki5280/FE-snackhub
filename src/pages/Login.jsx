@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { login, resetAuthState } from "../store/reducers/authReducer";
-import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import { FaUser, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 
@@ -106,9 +105,9 @@ const Login = () => {
                 <label className="block text-gray-700 text-sm font-bold mb-2">
                   Mật khẩu
                 </label>
-                <a href="#" className="text-xs text-gray-500">
+                <Link to="/forgot-password" className="text-xs text-[#ff784e] hover:text-[#ff6b3d]">
                   Quên mật khẩu?
-                </a>
+                </Link>
               </div>
               <div className="relative">
                 <input
