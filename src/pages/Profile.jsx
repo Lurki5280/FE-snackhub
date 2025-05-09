@@ -63,6 +63,8 @@ const Profile = () => {
   const [loadingPoints, setLoadingPoints] = useState(false);
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('momo');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 5;
 
   // Giả lập API request để cập nhật SnackPoints
   const mockUpdateSnackPoints = async (amount, method) => {
@@ -549,6 +551,15 @@ const Profile = () => {
     return orders.filter(order => order.orderStatus === statusFilter);
   };
 
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+  const getCurrentOrders = () => {
+    const filteredOrders = getFilteredOrders();
+    const indexOfLastOrder = currentPage * ordersPerPage;
+    const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+    return filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder);
+  };
+
   useEffect(() => {
     if (!token) {
       navigate('/login');
@@ -571,6 +582,10 @@ const Profile = () => {
       dispatch(getCurrentUser());
     }
   }, [activeTab, dispatch]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter]);
 
   if (!user) {
     return (
@@ -607,34 +622,34 @@ const Profile = () => {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="border-b border-gray-200 overflow-x-auto">
-            <nav className="flex">
+          <div className="border-b border-gray-200">
+            <nav className="-mb-px flex overflow-x-auto hide-scrollbar md:justify-evenly">
               <button
                 onClick={() => {
                   setActiveTab('profile');
                   navigate('/profile?tab=profile');
                 }}
-                className={`flex items-center px-6 py-3 font-medium ${
+                className={`shrink-0 inline-flex items-center px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base font-medium border-b-2 ${
                   activeTab === 'profile'
-                    ? 'text-[#ff784e] border-b-2 border-[#ff784e]'
-                    : 'text-gray-600 hover:text-[#ff784e]'
+                    ? 'text-[#ff784e] border-[#ff784e]'
+                    : 'text-gray-600 hover:text-[#ff784e] border-transparent'
                 }`}
               >
-                <FaUser className="mr-2" />
-                <span>Thông tin cá nhân</span>
+                <FaUser className="mr-1.5 md:mr-2 text-base md:text-lg" />
+                <span>Thông tin</span>
               </button>
               <button
                 onClick={() => {
                   setActiveTab('addresses');
                   navigate('/profile?tab=addresses');
                 }}
-                className={`flex items-center px-6 py-3 font-medium ${
+                className={`shrink-0 inline-flex items-center px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base font-medium border-b-2 ${
                   activeTab === 'addresses'
-                    ? 'text-[#ff784e] border-b-2 border-[#ff784e]'
-                    : 'text-gray-600 hover:text-[#ff784e]'
+                    ? 'text-[#ff784e] border-[#ff784e]'
+                    : 'text-gray-600 hover:text-[#ff784e] border-transparent'
                 }`}
               >
-                <FaMapMarkerAlt className="mr-2" />
+                <FaMapMarkerAlt className="mr-1.5 md:mr-2 text-base md:text-lg" />
                 <span>Địa chỉ</span>
               </button>
               <button
@@ -642,13 +657,13 @@ const Profile = () => {
                   setActiveTab('orders');
                   navigate('/profile?tab=orders');
                 }}
-                className={`flex items-center px-6 py-3 font-medium ${
+                className={`shrink-0 inline-flex items-center px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base font-medium border-b-2 ${
                   activeTab === 'orders'
-                    ? 'text-[#ff784e] border-b-2 border-[#ff784e]'
-                    : 'text-gray-600 hover:text-[#ff784e]'
+                    ? 'text-[#ff784e] border-[#ff784e]'
+                    : 'text-gray-600 hover:text-[#ff784e] border-transparent'
                 }`}
               >
-                <FaClipboardList className="mr-2" />
+                <FaClipboardList className="mr-1.5 md:mr-2 text-base md:text-lg" />
                 <span>Đơn hàng</span>
               </button>
               <button
@@ -656,27 +671,27 @@ const Profile = () => {
                   setActiveTab('reviews');
                   navigate('/profile?tab=reviews');
                 }}
-                className={`flex items-center px-6 py-3 font-medium ${
+                className={`shrink-0 inline-flex items-center px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base font-medium border-b-2 ${
                   activeTab === 'reviews'
-                    ? 'text-[#ff784e] border-b-2 border-[#ff784e]'
-                    : 'text-gray-600 hover:text-[#ff784e]'
+                    ? 'text-[#ff784e] border-[#ff784e]'
+                    : 'text-gray-600 hover:text-[#ff784e] border-transparent'
                 }`}
               >
-                <FaComment className="mr-2" />
-                <span>Đánh giá sản phẩm</span>
+                <FaComment className="mr-1.5 md:mr-2 text-base md:text-lg" />
+                <span>Đánh giá</span>
               </button>
               <button
                 onClick={() => {
                   setActiveTab('favorites');
                   navigate('/profile?tab=favorites');
                 }}
-                className={`flex items-center px-6 py-3 font-medium ${
+                className={`shrink-0 inline-flex items-center px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base font-medium border-b-2 ${
                   activeTab === 'favorites'
-                    ? 'text-[#ff784e] border-b-2 border-[#ff784e]'
-                    : 'text-gray-600 hover:text-[#ff784e]'
+                    ? 'text-[#ff784e] border-[#ff784e]'
+                    : 'text-gray-600 hover:text-[#ff784e] border-transparent'
                 }`}
               >
-                <FaHeart className="mr-2" />
+                <FaHeart className="mr-1.5 md:mr-2 text-base md:text-lg" />
                 <span>Yêu thích</span>
               </button>
               <button
@@ -684,13 +699,13 @@ const Profile = () => {
                   setActiveTab('snackpoints');
                   navigate('/profile?tab=snackpoints');
                 }}
-                className={`flex items-center px-6 py-3 font-medium ${
+                className={`shrink-0 inline-flex items-center px-3 md:px-4 py-2.5 md:py-3 text-sm md:text-base font-medium border-b-2 ${
                   activeTab === 'snackpoints'
-                    ? 'text-[#ff784e] border-b-2 border-[#ff784e]'
-                    : 'text-gray-600 hover:text-[#ff784e]'
+                    ? 'text-[#ff784e] border-[#ff784e]'
+                    : 'text-gray-600 hover:text-[#ff784e] border-transparent'
                 }`}
               >
-                <BiCoin className="mr-2" />
+                <BiCoin className="mr-1.5 md:mr-2 text-base md:text-lg" />
                 <span>SnackPoints</span>
               </button>
             </nav>
@@ -1005,7 +1020,7 @@ const Profile = () => {
                     <span className="font-medium">Đơn hàng của tôi</span>
                   </div>
                   
-                  {/* Thêm thanh lọc đơn hàng */}
+                  {/* Thanh lọc đơn hàng */}
                   <div className="flex items-center space-x-2">
                     <span className="text-sm">Lọc theo:</span>
                     <select 
@@ -1036,80 +1051,116 @@ const Profile = () => {
                     statusFilter === 'cancelled' ? 'đã hủy' : ''
                   }</div>
                 ) : (
-                  <div className="space-y-4">
-                    {getFilteredOrders().map((order) => (
-                      <div key={order._id} className="border rounded-lg p-4">
-                        <div className="flex justify-between items-center mb-4">
-                          <div>
-                            <p className="font-medium">Đơn hàng #{order._id}</p>
-                            <p className="text-sm text-gray-500">
-                              {new Date(order.orderDate).toLocaleDateString('vi-VN')}
-                            </p>
-                          </div>
-                          <div className={`px-3 py-1 rounded-full text-sm ${
-                            order.orderStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                            order.orderStatus === 'processing' ? 'bg-gray-100 text-blue-800' :
-                            order.orderStatus === 'shipping' ? 'bg-cyan-100 text-cyan-800' :
-                            order.orderStatus === 'delivered' ? 'bg-green-100 text-green-800' :
-                            order.orderStatus === 'cancelled' ? 'bg-red-100 text-red-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {order.orderStatus === 'pending' ? 'Chờ xử lý' :
-                             order.orderStatus === 'processing' ? 'Đang xử lý' :
-                             order.orderStatus === 'shipping' ? 'Đang giao hàng' :
-                             order.orderStatus === 'delivered' ? 'Đã hoàn thành' :
-                             order.orderStatus === 'cancelled' ? 'Đã hủy' :
-                             order.orderStatus}
-                          </div>
-                        </div>
-
-                        <div className="space-y-2">
-                          {order.items?.map((item) => (
-                            <div key={item._id} className="flex justify-between items-center py-2 border-b">
-                              <div className="flex items-center space-x-2">
-                                <img 
-                                  src={item.snackId?.images?.[0]} 
-                                  alt={item.snackId?.snackName}
-                                  className="w-12 h-12 object-cover rounded"
-                                />
-                                <div>
-                                  <p className="font-medium">{item.snackId?.snackName}</p>
-                                  <p className="text-sm text-gray-600">
-                                    {item.quantity} x {(item.price || 0).toLocaleString('vi-VN')}đ
-                                  </p>
-                                </div>
-                              </div>
-                              <p className="font-medium">
-                                {((item.price || 0) * (item.quantity || 0)).toLocaleString('vi-VN')}đ
+                  <>
+                    <div className="space-y-4">
+                      {getCurrentOrders().map((order) => (
+                        <div key={order._id} className="border rounded-lg p-4">
+                          {/* Existing order card content */}
+                          <div className="flex justify-between items-center mb-4">
+                            <div>
+                              <p className="font-medium">Đơn hàng #{order._id}</p>
+                              <p className="text-sm text-gray-500">
+                                {new Date(order.orderDate).toLocaleDateString('vi-VN')}
                               </p>
                             </div>
-                          ))}
-                        </div>
+                            <div className={`px-3 py-1 rounded-full text-sm ${
+                              order.orderStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              order.orderStatus === 'processing' ? 'bg-gray-100 text-blue-800' :
+                              order.orderStatus === 'shipping' ? 'bg-cyan-100 text-cyan-800' :
+                              order.orderStatus === 'delivered' ? 'bg-green-100 text-green-800' :
+                              order.orderStatus === 'cancelled' ? 'bg-red-100 text-red-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {order.orderStatus === 'pending' ? 'Chờ xử lý' :
+                               order.orderStatus === 'processing' ? 'Đang xử lý' :
+                               order.orderStatus === 'shipping' ? 'Đang giao hàng' :
+                               order.orderStatus === 'delivered' ? 'Đã hoàn thành' :
+                               order.orderStatus === 'cancelled' ? 'Đã hủy' :
+                               order.orderStatus}
+                            </div>
+                          </div>
 
-                        <div className="mt-4 flex justify-between items-center">
-                          <div className="text-lg font-semibold">
-                            Tổng cộng: <span className="text-[#ff784e]">{(order.totalAmount || 0).toLocaleString('vi-VN')}đ</span>
+                          <div className="space-y-2">
+                            {order.items?.map((item) => (
+                              <div key={item._id} className="flex justify-between items-center py-2 border-b">
+                                <div className="flex items-center space-x-2">
+                                  <img 
+                                    src={item.snackId?.images?.[0]} 
+                                    alt={item.snackId?.snackName}
+                                    className="w-12 h-12 object-cover rounded"
+                                  />
+                                  <div>
+                                    <p className="font-medium">{item.snackId?.snackName}</p>
+                                    <p className="text-sm text-gray-600">
+                                      {item.quantity} x {(item.price || 0).toLocaleString('vi-VN')}đ
+                                    </p>
+                                  </div>
+                                </div>
+                                <p className="font-medium">
+                                  {((item.price || 0) * (item.quantity || 0)).toLocaleString('vi-VN')}đ
+                                </p>
+                              </div>
+                            ))}
                           </div>
-                          <div className="flex space-x-2">
-                            {(order.orderStatus === 'pending' || order.orderStatus === 'processing') && (
-                              <button
-                                onClick={() => handleCancelOrder(order._id)}
-                                className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+
+                          <div className="mt-4 flex justify-between items-center">
+                            <div className="text-lg font-semibold">
+                              Tổng cộng: <span className="text-[#ff784e]">{(order.totalAmount || 0).toLocaleString('vi-VN')}đ</span>
+                            </div>
+                            <div className="flex space-x-2">
+                              {(order.orderStatus === 'pending' || order.orderStatus === 'processing') && (
+                                <button
+                                  onClick={() => handleCancelOrder(order._id)}
+                                  className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+                                >
+                                  Hủy đơn hàng
+                                </button>
+                              )}
+                              <Link
+                                to={`/orders/${order._id}`}
+                                className="px-4 py-2 text-sm text-white bg-[#ff784e] hover:bg-[#cc603e] rounded-md transition-colors"
                               >
-                                Hủy đơn hàng
-                              </button>
-                            )}
-                            <Link
-                              to={`/orders/${order._id}`}
-                              className="px-4 py-2 text-sm text-white bg-[#ff784e] hover:bg-[#cc603e] rounded-md transition-colors"
-                            >
-                              Xem chi tiết
-                            </Link>
+                                Xem chi tiết
+                              </Link>
+                            </div>
                           </div>
                         </div>
+                      ))}
+                    </div>
+
+                    {/* Pagination */}
+                    {getFilteredOrders().length > ordersPerPage && (
+                      <div className="flex justify-center items-center space-x-2 mt-6">
+                        <button
+                          onClick={() => paginate(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="px-3 py-1 rounded-md border text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                          Trước
+                        </button>
+                        {Array.from({ length: Math.ceil(getFilteredOrders().length / ordersPerPage) }).map((_, index) => (
+                          <button
+                            key={index}
+                            onClick={() => paginate(index + 1)}
+                            className={`px-3 py-1 rounded-md text-sm ${
+                              currentPage === index + 1
+                                ? 'bg-[#ff784e] text-white'
+                                : 'border hover:bg-gray-50'
+                            }`}
+                          >
+                            {index + 1}
+                          </button>
+                        ))}
+                        <button
+                          onClick={() => paginate(currentPage + 1)}
+                          disabled={currentPage === Math.ceil(getFilteredOrders().length / ordersPerPage)}
+                          className="px-3 py-1 rounded-md border text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                        >
+                          Sau
+                        </button>
                       </div>
-                    ))}
-                  </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -1339,14 +1390,14 @@ const Profile = () => {
             )}
 
             {activeTab === 'snackpoints' && (
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-2xl font-semibold text-gray-800 mb-6">SnackPoints</h2>
+              <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+                <h2 className="text-xl md:text-2xl font-semibold text-gray-800 mb-4 md:mb-6">SnackPoints</h2>
                 
-                <div className="flex items-center mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                  <BiCoin className="text-4xl text-yellow-500 mr-4" />
+                <div className="flex flex-col md:flex-row items-start md:items-center mb-4 md:mb-6 p-3 md:p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <BiCoin className="text-3xl md:text-4xl text-yellow-500 mb-2 md:mb-0 md:mr-4" />
                   <div className="flex-1">
-                    <p className="text-gray-600">Số SnackPoints hiện có:</p>
-                    <p className="text-2xl font-bold text-yellow-600">
+                    <p className="text-sm md:text-base text-gray-600">Số SnackPoints hiện có:</p>
+                    <p className="text-xl md:text-2xl font-bold text-yellow-600">
                       {user?.snackPoints?.toLocaleString('vi-VN') || 0}
                     </p>
                   </div>
@@ -1357,7 +1408,7 @@ const Profile = () => {
                         .then(() => toast.success("Đã cập nhật dữ liệu mới nhất"))
                         .catch(() => toast.error("Không thể tải dữ liệu"));
                     }}
-                    className="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                    className="mt-2 md:mt-0 w-full md:w-auto px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition text-sm md:text-base"
                   >
                     Làm mới
                   </button>
@@ -1371,13 +1422,13 @@ const Profile = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Chọn số SnackPoints cần nạp
                     </label>
-                    <div className="grid grid-cols-3 gap-3 mb-3">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3 mb-3">
                       {[50000, 100000, 200000, 500000, 1000000, 2000000].map((amount) => (
                         <button
                           key={amount}
                           type="button"
                           onClick={() => setSnackPointsAmount(amount.toString())}
-                          className={`py-2 px-4 rounded-md border ${
+                          className={`py-2 px-2 md:px-4 rounded-md border text-sm md:text-base ${
                             snackPointsAmount === amount.toString()
                               ? 'bg-[#ff784e] text-white border-[#ff784e]'
                               : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
@@ -1387,32 +1438,17 @@ const Profile = () => {
                         </button>
                       ))}
                     </div>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        value={snackPointsAmount}
-                        onChange={(e) => setSnackPointsAmount(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-[#ff784e] focus:border-[#ff784e]"
-                        placeholder="Hoặc nhập số điểm khác"
-                        min="10000"
-                        step="10000"
-                      />
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                        <span className="text-gray-500">VNĐ</span>
-                      </div>
-                    </div>
                   </div>
-                  
+
                   {/* Phương thức thanh toán */}
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Chọn phương thức thanh toán
                     </label>
-                    
-                    <div className="space-y-3">
+                    <div className="space-y-2">
                       {/* MoMo */}
                       <div 
-                        className={`border rounded-lg p-3 hover:shadow-md cursor-pointer bg-white transition-all ${selectedPaymentMethod === 'momo' ? 'border-[#ff784e]' : ''}`}
+                        className={`border rounded-lg p-2 md:p-3 hover:shadow-md cursor-pointer bg-white transition-all ${selectedPaymentMethod === 'momo' ? 'border-[#ff784e]' : ''}`}
                         onClick={() => setSelectedPaymentMethod('momo')}
                       >
                         <div className="flex items-center">
@@ -1424,22 +1460,22 @@ const Profile = () => {
                             onChange={() => setSelectedPaymentMethod('momo')}
                             className="h-4 w-4 text-[#ff784e] focus:ring-[#ff784e]"
                           />
-                          <label htmlFor="momo" className="ml-3 flex items-center cursor-pointer">
-                            <div className="w-10 h-10 bg-[#ae2070] rounded-md flex items-center justify-center mr-3">
-                              <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" alt="MoMo" className="w-8 h-8 object-contain" />
+                          <label htmlFor="momo" className="ml-2 md:ml-3 flex items-center cursor-pointer">
+                            <div className="w-8 h-8 md:w-10 md:h-10 bg-[#ae2070] rounded-md flex items-center justify-center mr-2 md:mr-3">
+                              <img src="/assets/momo.png" alt="MoMo" className="w-6 h-6 md:w-8 md:h-8 object-contain" />
                             </div>
                             <div>
-                              <p className="font-medium">Ví MoMo</p>
-                              <p className="text-xs text-gray-500">Thanh toán qua ví điện tử MoMo</p>
+                              <p className="font-medium text-sm md:text-base">MoMo</p>
+                              <p className="text-xs text-gray-500">Thanh toán qua ví MoMo</p>
                             </div>
                           </label>
                         </div>
                         
-                        <div className="ml-7 mt-3">
-                          {snackPointsAmount && Number(snackPointsAmount) > 0 && (
-                            <div className="flex bg-gray-50 p-3 rounded-md">
-                              <div className="mr-4 bg-white p-2 rounded-md">
-                                <div className="w-32 h-32 border border-gray-200 rounded-md overflow-hidden">
+                        {selectedPaymentMethod === 'momo' && snackPointsAmount && Number(snackPointsAmount) > 0 && (
+                          <div className="ml-7 mt-3">
+                            <div className="flex flex-col md:flex-row bg-gray-50 p-2 md:p-3 rounded-md">
+                              <div className="mb-3 md:mb-0 md:mr-4 bg-white p-2 rounded-md">
+                                <div className="w-full md:w-32 h-32 border border-gray-200 rounded-md overflow-hidden">
                                   <img
                                     src="/assets/momo-qr.jpg"
                                     alt="MoMo QR"
@@ -1449,8 +1485,8 @@ const Profile = () => {
                                 <p className="text-xs text-center mt-2 text-gray-500">Quét mã QR để thanh toán</p>
                               </div>
                               <div className="flex-1">
-                                <h4 className="font-medium mb-2">Hướng dẫn thanh toán</h4>
-                                <ol className="text-sm text-gray-700 space-y-1 list-decimal list-inside">
+                                <h4 className="font-medium mb-2 text-sm md:text-base">Hướng dẫn thanh toán</h4>
+                                <ol className="text-xs md:text-sm text-gray-700 space-y-1 list-decimal list-inside">
                                   <li>Mở ứng dụng MoMo trên điện thoại</li>
                                   <li>Chọn "Quét mã QR"</li>
                                   <li>Quét mã QR bên trái</li>
@@ -1459,13 +1495,13 @@ const Profile = () => {
                                 </ol>
                               </div>
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
-                      
+
                       {/* PayPal */}
                       <div 
-                        className={`border rounded-lg p-3 hover:shadow-md cursor-pointer bg-white transition-all ${selectedPaymentMethod === 'paypal' ? 'border-[#ff784e]' : ''}`}
+                        className={`border rounded-lg p-2 md:p-3 hover:shadow-md cursor-pointer bg-white transition-all ${selectedPaymentMethod === 'paypal' ? 'border-[#ff784e]' : ''}`}
                         onClick={() => setSelectedPaymentMethod('paypal')}
                       >
                         <div className="flex items-center">
@@ -1477,45 +1513,21 @@ const Profile = () => {
                             onChange={() => setSelectedPaymentMethod('paypal')}
                             className="h-4 w-4 text-[#ff784e] focus:ring-[#ff784e]"
                           />
-                          <label htmlFor="paypal" className="ml-3 flex items-center cursor-pointer">
-                            <div className="w-10 h-10 bg-[#0070ba] rounded-md flex items-center justify-center mr-3">
-                              <FaPaypal className="text-white text-xl" />
+                          <label htmlFor="paypal" className="ml-2 md:ml-3 flex items-center cursor-pointer">
+                            <div className="w-8 h-8 md:w-10 md:h-10 bg-[#0070ba] rounded-md flex items-center justify-center mr-2 md:mr-3">
+                              <img src="/assets/paypal.png" alt="PayPal" className="w-6 h-6 md:w-8 md:h-8 object-contain" />
                             </div>
                             <div>
-                              <p className="font-medium">PayPal</p>
-                              <p className="text-xs text-gray-500">Thanh toán an toàn qua PayPal</p>
+                              <p className="font-medium text-sm md:text-base">PayPal</p>
+                              <p className="text-xs text-gray-500">Thanh toán qua PayPal</p>
                             </div>
                           </label>
                         </div>
-                        
-                        {selectedPaymentMethod === 'paypal' && (
-                          <div className="ml-7 mt-3">
-                            <div className="p-4 bg-blue-50 rounded-md border border-blue-100">
-                              <div className="flex items-start">
-                                <div className="flex-shrink-0 mt-0.5">
-                                  <FaPaypal className="text-[#0070ba] text-xl" />
-                                </div>
-                                <div className="ml-3">
-                                  <h4 className="text-sm font-medium text-blue-800">Thanh toán an toàn qua PayPal</h4>
-                                  <p className="mt-1 text-sm text-blue-700">
-                                    Bạn sẽ được chuyển đến trang thanh toán PayPal an toàn sau khi nhấn "Xác nhận nạp SnackPoints".
-                                    <br />
-                                    Bạn có thể thanh toán bằng tài khoản PayPal hoặc thẻ tín dụng/ghi nợ.
-                                  </p>
-                                  <div className="mt-2 flex items-center">
-                                    <img src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/PP_logo_h_100x26.png" alt="PayPal" className="h-6" />
-                                    <img src="https://www.paypalobjects.com/webstatic/en_US/i/buttons/cc-badges-ppppcmcvdam.png" alt="Credit Card Badges" className="h-6 ml-2" />
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
                       </div>
-                      
+
                       {/* VNPay */}
                       <div 
-                        className={`border rounded-lg p-3 hover:shadow-md cursor-pointer bg-white transition-all ${selectedPaymentMethod === 'vnpay' ? 'border-[#ff784e]' : ''}`}
+                        className={`border rounded-lg p-2 md:p-3 hover:shadow-md cursor-pointer bg-white transition-all ${selectedPaymentMethod === 'vnpay' ? 'border-[#ff784e]' : ''}`}
                         onClick={() => setSelectedPaymentMethod('vnpay')}
                       >
                         <div className="flex items-center">
@@ -1527,86 +1539,71 @@ const Profile = () => {
                             onChange={() => setSelectedPaymentMethod('vnpay')}
                             className="h-4 w-4 text-[#ff784e] focus:ring-[#ff784e]"
                           />
-                          <label htmlFor="vnpay" className="ml-3 flex items-center cursor-pointer">
-                            <div className="w-10 h-10 bg-[#0056b3] rounded-md flex items-center justify-center mr-3">
-                              <img src="/assets/vnpay.png" alt="VNPay" className="w-8 h-8 object-contain" />
+                          <label htmlFor="vnpay" className="ml-2 md:ml-3 flex items-center cursor-pointer">
+                            <div className="w-8 h-8 md:w-10 md:h-10 bg-[#0056b3] rounded-md flex items-center justify-center mr-2 md:mr-3">
+                              <img src="/assets/vnpay.png" alt="VNPay" className="w-6 h-6 md:w-8 md:h-8 object-contain" />
                             </div>
                             <div>
-                              <p className="font-medium">VNPay</p>
+                              <p className="font-medium text-sm md:text-base">VNPay</p>
                               <p className="text-xs text-gray-500">Thanh toán qua QR VNPay</p>
                             </div>
                           </label>
                         </div>
                       </div>
-                      
                     </div>
                   </div>
-                  
+
                   {/* Nút nạp */}
                   <button
                     onClick={handleLoadSnackPoints}
                     disabled={!snackPointsAmount || loadingPoints}
-                    className="w-full py-3 bg-[#ff784e] text-white rounded-md font-semibold disabled:opacity-70 disabled:cursor-not-allowed hover:bg-[#e66b44] transition-all"
+                    className="w-full py-2 md:py-3 bg-[#ff784e] text-white rounded-md font-semibold disabled:opacity-70 disabled:cursor-not-allowed hover:bg-[#e66b44] transition-all text-sm md:text-base"
                   >
                     {loadingPoints ? 'Đang xử lý...' : 'Xác nhận nạp SnackPoints'}
                   </button>
                 </div>
-                
+
                 {/* Lịch sử giao dịch */}
-                <div className="mt-8">
+                <div className="mt-6 md:mt-8">
                   <h3 className="text-lg font-medium text-gray-800 mb-3">Lịch sử giao dịch</h3>
-                  <div className="border rounded-lg overflow-hidden">
+                  <div className="border rounded-lg overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
                         <tr>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày</th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hình thức giao dịch</th>
-                          <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số SnackPoints</th>
+                          <th scope="col" className="px-4 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày</th>
+                          <th scope="col" className="px-4 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hình thức</th>
+                          <th scope="col" className="px-4 md:px-6 py-2 md:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SnackPoints</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {user.pointsHistory && user.pointsHistory.length > 0 ? (
                           user.pointsHistory.map((history, index) => (
                             <tr key={index}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-4 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-500">
                                 {new Date(history.date).toLocaleDateString('vi-VN')}
                               </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <td className="px-4 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-500">
                                 {(() => {
-                                  // Kiểm tra nếu description undefined hoặc null
                                   if (!history.description) return 'Giao dịch';
-                                  
-                                  // Xác định hình thức giao dịch dựa trên mô tả
                                   const description = history.description.toLowerCase();
-                                  
                                   if (description.includes('momo')) return 'MoMo';
                                   if (description.includes('paypal')) return 'PayPal';
                                   if (description.includes('vnpay')) return 'VNPay';
                                   if (description.includes('zalopay')) return 'ZaloPay';
-                                  
-                                  if (description.includes('nạp') || description.includes('thêm')) {
-                                    return 'Nạp SnackPoints';
-                                  }
-                                  
-                                  if (description.includes('thanh toán') || description.includes('mua')) {
-                                    return 'Thanh toán đơn hàng';
-                                  }
-                                  
-                                  if (description.includes('hoàn') || description.includes('trả')) {
-                                    return 'Hoàn tiền';
-                                  }
-                                  
+                                  if (description.includes('nạp') || description.includes('thêm')) return 'Nạp';
+                                  if (description.includes('thanh toán') || description.includes('mua')) return 'Thanh toán';
+                                  if (description.includes('hoàn') || description.includes('trả')) return 'Hoàn tiền';
                                   return history.description;
                                 })()}
                               </td>
-                              <td className={`px-6 py-4 whitespace-nowrap text-sm font-medium ${history.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              <td className={`px-4 md:px-6 py-2 md:py-4 whitespace-nowrap text-xs md:text-sm font-medium ${history.amount > 0 ? 'text-green-600' : 'text-red-600'}`}>
                                 {history.amount > 0 ? '+' : ''}{history.amount.toLocaleString('vi-VN')}
                               </td>
                             </tr>
                           ))
                         ) : (
                           <tr>
-                            <td colSpan="3" className="px-6 py-4 text-center text-sm text-gray-500">
+                            <td colSpan="3" className="px-4 md:px-6 py-2 md:py-4 text-center text-xs md:text-sm text-gray-500">
                               Chưa có giao dịch nào
                             </td>
                           </tr>
@@ -1615,11 +1612,11 @@ const Profile = () => {
                     </table>
                   </div>
                 </div>
-                
+
                 {/* Thông tin về SnackPoints */}
-                <div className="bg-gray-50 p-4 rounded-lg mt-6">
-                  <h3 className="text-lg font-medium text-gray-800 mb-3">Thông tin về SnackPoints</h3>
-                  <ul className="list-disc pl-5 space-y-2 text-gray-600">
+                <div className="bg-gray-50 p-3 md:p-4 rounded-lg mt-4 md:mt-6">
+                  <h3 className="text-base md:text-lg font-medium text-gray-800 mb-2 md:mb-3">Thông tin về SnackPoints</h3>
+                  <ul className="list-disc pl-4 md:pl-5 space-y-1 md:space-y-2 text-xs md:text-sm text-gray-600">
                     <li>SnackPoints là điểm thưởng dùng để mua sản phẩm trên SnackHub</li>
                     <li>1 SnackPoint = 1 VND khi thanh toán</li>
                     <li>SnackPoints không có thời hạn sử dụng</li>
